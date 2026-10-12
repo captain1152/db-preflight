@@ -24,4 +24,5 @@ All notable changes are documented here. This project follows [Semantic Versioni
 - Schema discovery treats links named like excluded directories (`node_modules`, `generated`, ...) as excluded, so they
   no longer make a scan inconclusive.
 - DBP004 accepts any validated, enforced matching foreign key regardless of constraint name order.
-- `pnpm test:package` works with GNU tar (Git Bash) and temp paths containing spaces on Windows.
+- `pnpm test:package` works with GNU tar (Git Bash), temp paths containing spaces, and Node 22 on Windows (no
+  `fs.cpSync` for non-ASCII destinations).

@@ -25,7 +25,7 @@ release, tag or Anthropic directory submission has been made. This page lists wh
 | Local load with `claude --plugin-dir` and invoking the skills | see "Claude load check" below |
 | `claude plugin marketplace add` / `claude plugin install` from the local checkout | verified at local scope in a temporary project, then removed (see `docs/PROGRESS.md`) |
 | GitHub-hosted marketplace (`claude plugin marketplace add captain1152/db-preflight`) | **not verified** |
-| GitHub Actions | first run on `690d593`: everything green except Windows `pnpm test:package` (fixed afterwards; re-run pending push) |
+| GitHub Actions | `690d593`: Windows package smoke failed (GNU tar paths); `60283ce`: only Windows Node 22 package smoke failed (Node 22 `cpSync` with non-ASCII paths); both fixed in the test script, re-run pending push |
 
 ### Claude load check
 
@@ -56,7 +56,7 @@ Decided on 2026-10-12:
 - [ ] `git status` clean; no `.env`, real snapshots, reports or logs tracked (`git ls-files | grep -Ei "snapshot|report|\.env"` shows only fixtures/examples).
 - [ ] `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm test:package && pnpm check:bundle`.
 - [ ] `pnpm test:prisma` and `pnpm test:integration` pass (Docker).
-- [ ] CI green on Linux and Windows (first run on `690d593`: Windows package smoke failed; fix pending push).
+- [ ] CI green on Linux and Windows (Windows Node 22 package smoke fix pending push).
 - [ ] `claude plugin validate plugins/claude/db-preflight` and `claude plugin validate .` pass.
 - [ ] Manual: `claude --plugin-dir ./plugins/claude/db-preflight`, run `/db-preflight:scan demo` and `/db-preflight:explain <report>`.
 - [ ] README examples regenerated from the current build (`docs/examples/`), no unmeasured numbers or badges.

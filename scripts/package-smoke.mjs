@@ -5,7 +5,7 @@
 //  3. On Windows, run the same through PowerShell to verify quoting and exit codes.
 //  4. `npm pack` the package, extract the tarball elsewhere, and run the CLI from it.
 import { execFileSync, spawnSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -23,6 +23,16 @@ function check(name, ok, detail = "") {
 // Minimal environment: no NODE_PATH, no PG*, no DATABASE_URL.
 const env = { PATH: process.env.PATH ?? "", ...(process.env.SystemRoot ? { SystemRoot: process.env.SystemRoot } : {}) };
 
+// fs.cpSync on Windows with Node 22 writes to a mis-encoded path when the destination contains
+// non-ASCII characters (observed with 22.23.3; 24.x is fine), so copy with basic fs calls.
+function copyDir(src, dst) {
+  mkdirSync(dst, { recursive: true });
+  for (const e of readdirSync(src, { withFileTypes: true })) {
+    if (e.isDirectory()) copyDir(join(src, e.name), join(dst, e.name));
+    else if (e.isFile()) copyFileSync(join(src, e.name), join(dst, e.name));
+  }
+}
+
 function runNode(bin, args, cwd) {
   const r = spawnSync(process.execPath, [bin, ...args], { cwd, env, encoding: "utf8", timeout: 60_000 });
   return { code: r.status, stdout: r.stdout ?? "", stderr: r.stderr ?? "" };
@@ -31,7 +41,7 @@ function runNode(bin, args, cwd) {
 try {
   // ---- 1. plugin directory alone ------------------------------------------------------------
   const pluginCopy = join(root, "plugin copy", "db-preflight");
-  cpSync(join(repo, "plugins/claude/db-preflight"), pluginCopy, { recursive: true });
+  copyDir(join(repo, "plugins/claude/db-preflight"), pluginCopy);
   const required = [
     ".claude-plugin/plugin.json",
     "skills/scan/SKILL.md",
@@ -50,8 +60,8 @@ try {
 
   const project = join(root, "user project 한글");
   mkdirSync(project, { recursive: true });
-  cpSync(join(repo, "fixtures/composite-one-to-one-mismatch"), join(project, "broken"), { recursive: true });
-  cpSync(join(repo, "fixtures/healthy"), join(project, "healthy"), { recursive: true });
+  copyDir(join(repo, "fixtures/composite-one-to-one-mismatch"), join(project, "broken"));
+  copyDir(join(repo, "fixtures/healthy"), join(project, "healthy"));
   const bin = join(pluginCopy, "dist", "db-preflight.cjs");
 
   const demo = runNode(bin, ["demo", "--format", "json"], project);

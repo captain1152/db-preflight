@@ -6,7 +6,7 @@ All entries were checked on **2026-10-08**.
 
 | Component | Selected / tested | Status |
 |---|---|---|
-| Node.js | `engines: >=20.19.0`; developed and tested on 24.15.0 (Windows 11) | Windows verified locally; CI (`690d593`): Linux Node 22/24 checks and the bundled CLI on Node 20.19 passed; Windows CI failed only at package smoke (fixed, re-run pending) |
+| Node.js | `engines: >=20.19.0`; developed and tested on 24.15.0 (Windows 11) | Windows verified locally; CI (`690d593`): Linux Node 22/24 checks and the bundled CLI on Node 20.19 passed; Windows CI: Node 24 passed on `60283ce`; Node 22 failed only at package smoke because of a Node 22 `fs.cpSync` non-ASCII path bug in the test script (fixed, re-run pending) |
 | PostgreSQL | 16.15 and 18.6 (`postgres:16.15-alpine`, `postgres:18.6-alpine`) | verified by `pnpm test:integration` (local Docker) |
 | PostgreSQL 14, 15, 17 | collector has version-specific queries (min 14) | **not verified**; not advertised as supported |
 | Prisma ORM | schema semantics of **7.x**; fixtures validated with pinned `prisma@7.10.0` (dev only) | verified by `pnpm test:prisma` |

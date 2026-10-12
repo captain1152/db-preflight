@@ -66,6 +66,13 @@ fixtures and PostgreSQL 16 + 18 integration **succeeded**; both Windows jobs **f
 failure reproduced locally under Git Bash: GNU tar reads `C:` in an absolute archive or `-C` path as a remote host.
 The job log itself was not retrieved (needs authentication), so the CI cause is inferred.
 
+Second run (run 38223482271, `60283ce`): everything green, including Windows Node 24, except Windows Node 22 at
+`pnpm test:package`. Reproduced locally with Node 22.23.3: on Windows, `fs.cpSync` writes to a mis-encoded path when
+the destination contains non-ASCII characters (the plugin copy landed in `dbp smoke 怨듬갚-…` instead of
+`dbp smoke 공백-…`). `package-smoke` now copies with basic fs calls; 27/27 on Node 22.23.3 and 24.15.0. The product CLI
+does not use `cpSync`. Workflow actions moved from v4 to v5 (Node 24 runtime) to clear the Node 20 deprecation
+warnings.
+
 A Codex review of the IR-009 … IR-015 fixes (3 plan-review rounds, approved) and two fresh-session inspections of the
 resulting diff found further defects, fixed with regression tests in `tests/unit/inspection-regressions.test.ts` and
 `tests/unit/discover.test.ts` (each new test except RV-001/RV-008 was run against the
