@@ -1,0 +1,13 @@
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id      Int      @id
+  profile Profile?
+}
+
+model Profile {
+  userId Int  @id
+  user   User @relation(fields: [userId], references: [id])
+}

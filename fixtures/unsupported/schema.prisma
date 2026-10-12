@@ -1,0 +1,32 @@
+// Synthetic fixture: constructs that v0.1 identifies but does not evaluate.
+// Expected outcome: no confirmed mismatch, but required checks are unknown (exit 3).
+datasource db {
+  provider = "postgresql"
+}
+
+model Customer {
+  id        Int       @id
+  email     String
+  deletedAt DateTime? @map("deleted_at")
+  tags      Tag[]
+
+  // Partial unique index (Prisma preview "partialIndexes"): semantics not evaluated in v0.1.
+  @@unique([email], where: raw("deleted_at IS NULL"))
+  @@map("customers")
+}
+
+// Implicit many-to-many: the hidden join table is not checked in v0.1.
+model Tag {
+  id        Int        @id
+  label     String
+  customers Customer[]
+
+  @@map("tags")
+}
+
+view ActiveCustomer {
+  id    Int    @unique
+  email String
+
+  @@map("active_customers")
+}

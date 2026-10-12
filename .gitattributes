@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.ps1 text eol=crlf
+# Built artifacts are compared byte-for-byte in CI; never convert line endings.
+plugins/claude/db-preflight/dist/** -text

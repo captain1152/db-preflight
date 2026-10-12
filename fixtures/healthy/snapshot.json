@@ -1,0 +1,223 @@
+{
+  "snapshotVersion": 1,
+  "generator": {
+    "name": "db-preflight",
+    "version": "0.1.0"
+  },
+  "origin": "synthetic",
+  "collectedAt": "2026-01-15T09:00:00.000Z",
+  "server": {
+    "version": "16.4",
+    "versionNum": 160004
+  },
+  "requestedSchemas": [
+    "public"
+  ],
+  "schemasFound": [
+    "public"
+  ],
+  "complete": true,
+  "gaps": [],
+  "readOnly": {
+    "verified": false,
+    "detail": "synthetic fixture; no database connection"
+  },
+  "tables": [
+    {
+      "schema": "public",
+      "name": "monthly_snapshots",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "organization_id",
+          "nullable": false
+        },
+        {
+          "name": "month",
+          "nullable": false
+        },
+        {
+          "name": "snapshot_id",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "nullable": false
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "primary_key",
+          "name": "monthly_snapshots_pkey",
+          "columns": [
+            "organization_id",
+            "month",
+            "snapshot_id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "monthly_snapshots_organization_id_fkey",
+          "columns": [
+            "organization_id"
+          ],
+          "references": {
+            "schema": "public",
+            "table": "organizations",
+            "columns": [
+              "id"
+            ]
+          },
+          "deferrable": false,
+          "validated": true,
+          "enforced": true
+        }
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "organizations",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "id",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "nullable": false
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "primary_key",
+          "name": "organizations_pkey",
+          "columns": [
+            "id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": []
+    },
+    {
+      "schema": "public",
+      "name": "snapshot_summaries",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "id",
+          "nullable": false
+        },
+        {
+          "name": "organization_id",
+          "nullable": false
+        },
+        {
+          "name": "month",
+          "nullable": false
+        },
+        {
+          "name": "snapshot_id",
+          "nullable": false
+        },
+        {
+          "name": "total_amount",
+          "nullable": false
+        },
+        {
+          "name": "note",
+          "nullable": true
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "unique_constraint",
+          "name": "snapshot_summaries_organization_id_month_snapshot_id_key",
+          "columns": [
+            "organization_id",
+            "month",
+            "snapshot_id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        },
+        {
+          "kind": "primary_key",
+          "name": "snapshot_summaries_pkey",
+          "columns": [
+            "id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "snapshot_summaries_snapshot_fkey",
+          "columns": [
+            "organization_id",
+            "month",
+            "snapshot_id"
+          ],
+          "references": {
+            "schema": "public",
+            "table": "monthly_snapshots",
+            "columns": [
+              "organization_id",
+              "month",
+              "snapshot_id"
+            ]
+          },
+          "deferrable": false,
+          "validated": true,
+          "enforced": true
+        }
+      ]
+    }
+  ],
+  "otherRelations": []
+}

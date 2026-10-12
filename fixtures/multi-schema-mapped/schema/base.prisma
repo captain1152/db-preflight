@@ -1,0 +1,11 @@
+// Synthetic fixture: two database schemas, @map/@@map everywhere, the same physical table
+// name ("events") in both schemas, a self relation and two named relations between one model pair.
+datasource db {
+  provider = "postgresql"
+  schemas  = ["core", "reporting"]
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+}

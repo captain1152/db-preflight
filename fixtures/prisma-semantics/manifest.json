@@ -1,0 +1,18 @@
+{
+  "description": "Which uniqueness declarations prisma@7.10.0 accepts on the owning side of a 1:1 relation. Observed with `pnpm test:prisma` on 2026-10-08. Our DBP001 must agree with every entry.",
+  "prismaVersion": "7.10.0",
+  "variants": {
+    "composite-none": { "prismaValidate": "fail-P1012", "dbp001": "fail" },
+    "composite-exact-unique": { "prismaValidate": "pass", "dbp001": "pass" },
+    "composite-reordered-unique": { "prismaValidate": "fail-P1012", "dbp001": "fail" },
+    "composite-subset-unique": { "prismaValidate": "fail-P1012", "dbp001": "fail" },
+    "composite-superset-unique": { "prismaValidate": "fail-P1012", "dbp001": "fail" },
+    "composite-exact-id": { "prismaValidate": "pass", "dbp001": "pass" },
+    "composite-reordered-id": { "prismaValidate": "fail-P1012", "dbp001": "fail" },
+    "composite-single-field-unique": { "prismaValidate": "fail-P1012", "dbp001": "fail" },
+    "single-none": { "prismaValidate": "fail-P1012", "dbp001": "fail" },
+    "single-unique": { "prismaValidate": "pass", "dbp001": "pass" },
+    "single-block-unique": { "prismaValidate": "pass", "dbp001": "pass" },
+    "single-id": { "prismaValidate": "pass", "dbp001": "pass" }
+  }
+}

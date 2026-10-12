@@ -1,0 +1,23 @@
+// Synthetic fixture: relationMode = "prisma" means no physical foreign keys are expected.
+datasource db {
+  provider     = "postgresql"
+  relationMode = "prisma"
+}
+
+model Author {
+  id    Int    @id
+  name  String
+  posts Post[]
+
+  @@map("authors")
+}
+
+model Post {
+  id       Int    @id
+  title    String
+  authorId Int    @map("author_id")
+  author   Author @relation(fields: [authorId], references: [id])
+
+  @@index([authorId])
+  @@map("posts")
+}

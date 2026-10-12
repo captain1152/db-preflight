@@ -1,0 +1,8 @@
+# Single-package repository. This file only carries pnpm settings.
+# Dependency lifecycle scripts are denied by default. esbuild's install script only
+# verifies its platform binary; Prisma's install scripts are not needed for
+# `prisma validate` on fixtures and are kept disabled to avoid engine downloads.
+allowBuilds:
+  esbuild: true
+  prisma: false
+  "@prisma/engines": false

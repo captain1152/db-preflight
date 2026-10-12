@@ -1,0 +1,27 @@
+DB Preflight 0.1.0 - scan (snapshot)
+Prisma:   1 file(s) from a file; evaluated with Prisma ORM 7 semantics; relationMode foreignKeys (default)
+Database: snapshot (snapshot of a live database), collected 2026-10-08T09:41:57.870Z, PostgreSQL 16.15, schemas [public], collection complete
+          --default-schema public
+          Metadata comes from a snapshot taken at collectedAt; it may not reflect the database's current state.
+
+RESULT: INCONCLUSIVE (exit code 3)
+  No confirmed mismatches, but 6 required check(s) are unknown; no conclusion can be drawn.
+
+Unknown checks (6) - not evaluated, NOT treated as passing:
+  [?] DBP002 unique ActiveCustomer(id): view ActiveCustomer is not evaluated by v0.1
+  [?] DBP002 unique Customer(email): partial @@unique(where: ...) is not evaluated by v0.1
+  [?] DBP003 model ActiveCustomer: view ActiveCustomer is not evaluated by v0.1
+  [?] DBP004 relation Customer.tags<->Tag.customers: implicit many-to-many join tables are not checked by v0.1
+  [?] DBP006 field ActiveCustomer.email: view ActiveCustomer is not evaluated by v0.1
+  [?] DBP006 field ActiveCustomer.id: view ActiveCustomer is not evaluated by v0.1
+
+Coverage: 17 checks - pass 9, fail 0, unknown 6, not applicable 2. Complete within scope: no.
+Not covered by this tool:
+  - Row data: table rows are never read, so existing duplicates or orphaned rows are not detected.
+  - CHECK constraints, triggers, defaults, generated columns, RLS policies and privileges.
+  - Migration safety, lock impact and production readiness.
+  - Prisma Client runtime behaviour and generated client code.
+  - Database objects outside the requested schemas.
+
+Safety: database access none; read-only transaction verified: n/a; Prisma input files unchanged (re-hashed): yes; LLM/network calls: none.
+Note: Results cover only the supported checks listed in this report, evaluated against the collected metadata. They are not a guarantee that the database as a whole is correct, that data is consistent, or that any migration is safe.

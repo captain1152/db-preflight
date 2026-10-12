@@ -1,0 +1,22 @@
+datasource db {
+  provider = "postgresql"
+}
+
+model Parent {
+  a     Int
+  b     Int
+  c     Int
+  child Child?
+
+  @@id([a, b, c])
+}
+
+model Child {
+  id Int @id
+  a      Int
+  b      Int
+  c      Int
+  parent Parent @relation(fields: [a, b, c], references: [a, b, c])
+
+  @@unique([a, b])
+}

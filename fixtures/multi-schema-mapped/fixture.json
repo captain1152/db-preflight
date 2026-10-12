@@ -1,0 +1,20 @@
+{
+  "description": "Two database schemas, @map/@@map/@@schema, the same physical table name in two schemas, a self relation and two named relations between one model pair. Multi-file schema input including a nested directory.",
+  "schema": "schema",
+  "snapshot": "snapshot.json",
+  "snapshotSource": "live",
+  "dbSchemas": ["core", "reporting"],
+  "defaultSchema": null,
+  "expectedExitCode": 0,
+  "prismaValidate": "pass",
+  "expectedChecks": {
+    "DBP003:model Event": "pass",
+    "DBP003:model ReportEvent": "pass",
+    "DBP004:relation Account.manager": "pass",
+    "DBP004:relation ReportEvent.owner": "pass",
+    "DBP004:relation ReportEvent.reviewer": "pass",
+    "DBP006:field ReportEvent.reviewerId": "pass",
+    "DBP002:unique Account(email)": "pass"
+  },
+  "expectedFindingGroups": 0
+}

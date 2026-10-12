@@ -1,0 +1,16 @@
+{
+  "description": "Partial unique (where:), implicit many-to-many and a view: identified, not evaluated, never reported as passing. Expected inconclusive (exit 3).",
+  "schema": "schema.prisma",
+  "snapshot": "snapshot.json",
+  "snapshotSource": "live",
+  "dbSchemas": ["public"],
+  "defaultSchema": "public",
+  "expectedExitCode": 3,
+  "prismaValidate": "fail",
+  "expectedChecks": {
+    "DBP002:unique Customer(email)": "unknown",
+    "DBP004:relation Customer.tags<->Tag.customers": "unknown",
+    "DBP003:model ActiveCustomer": "unknown"
+  },
+  "expectedFindingGroups": 0
+}

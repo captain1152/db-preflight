@@ -1,0 +1,15 @@
+{
+  "description": "relationMode = \"prisma\": the database has no foreign keys and that must not be reported.",
+  "schema": "schema.prisma",
+  "snapshot": "snapshot.json",
+  "snapshotSource": "live",
+  "dbSchemas": ["public"],
+  "defaultSchema": "public",
+  "expectedExitCode": 0,
+  "prismaValidate": "pass",
+  "expectedChecks": {
+    "DBP004:relation Post.author": "not_applicable",
+    "DBP001:relation Post.author": "not_applicable"
+  },
+  "expectedFindingGroups": 0
+}

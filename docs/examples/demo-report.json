@@ -1,0 +1,799 @@
+{
+  "reportVersion": 1,
+  "toolVersion": "0.1.0",
+  "generatedAt": "2026-10-09T00:55:43.690Z",
+  "mode": "demo",
+  "scope": {
+    "dbSchemas": [
+      "public"
+    ],
+    "defaultSchema": "public",
+    "rules": [
+      "DBP001",
+      "DBP002",
+      "DBP003",
+      "DBP004",
+      "DBP005",
+      "DBP006"
+    ]
+  },
+  "prisma": {
+    "ormMajorAssumed": 7,
+    "inputKind": "directory",
+    "files": [
+      {
+        "path": "base.prisma",
+        "sha256": "897280f473388eb830751372b82c474720e8ce0900dc070349eefe729c3c67ad",
+        "bytes": 191
+      },
+      {
+        "path": "organization.prisma",
+        "sha256": "682f82b2659f27b4fda83fa5dc02ab3db056b00675d96343a14ea39baf2255df",
+        "bytes": 158
+      },
+      {
+        "path": "reporting.prisma",
+        "sha256": "eaf8e279dabd9668c6eca0ace28e0694493abdd1c6974ab217269394d40f760a",
+        "bytes": 1301
+      }
+    ],
+    "skipped": [],
+    "datasource": {
+      "found": true,
+      "provider": "postgresql",
+      "relationMode": "foreignKeys",
+      "relationModeSource": "default",
+      "schemas": null
+    },
+    "counts": {
+      "models": 3,
+      "views": 0,
+      "enums": 0,
+      "relations": 2
+    },
+    "diagnostics": []
+  },
+  "database": {
+    "source": "demo",
+    "snapshotOrigin": "synthetic",
+    "collectedAt": "2026-01-15T09:00:00.000Z",
+    "serverVersion": "16.4",
+    "requestedSchemas": [
+      "public"
+    ],
+    "schemasFound": [
+      "public"
+    ],
+    "collectionComplete": true,
+    "gaps": [],
+    "note": "Built-in synthetic demo metadata; no database was contacted."
+  },
+  "result": {
+    "status": "mismatch_found",
+    "exitCode": 1,
+    "summary": "2 check(s) found confirmed mismatches, grouped into 1 root-cause group(s).",
+    "disclaimer": "Results cover only the supported checks listed in this report, evaluated against the collected metadata. They are not a guarantee that the database as a whole is correct, that data is consistent, or that any migration is safe."
+  },
+  "checks": [
+    {
+      "id": "DBP001:relation MonthlySnapshot.organization",
+      "ruleId": "DBP001",
+      "subject": "relation MonthlySnapshot.organization",
+      "status": "not_applicable",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 8,
+          "column": 3,
+          "detail": "MonthlySnapshot.organization @relation(fields: [organizationId], references: [id])"
+        },
+        {
+          "kind": "prisma",
+          "file": "organization.prisma",
+          "line": 4,
+          "column": 3,
+          "detail": "Organization.snapshots is a list (1:n)"
+        }
+      ],
+      "reasonCode": "not_one_to_one",
+      "reason": "relation is 1:n"
+    },
+    {
+      "id": "DBP001:relation SnapshotSummary.snapshot",
+      "ruleId": "DBP001",
+      "subject": "relation SnapshotSummary.snapshot",
+      "status": "fail",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 25,
+          "column": 3,
+          "detail": "SnapshotSummary.snapshot @relation(fields: [organizationId, month, snapshotId], references: [organizationId, month, snapshotId])"
+        },
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 9,
+          "column": 3,
+          "detail": "MonthlySnapshot.summary is not a list (1:1)"
+        }
+      ],
+      "reasonCode": "one_to_one_without_unique_declaration",
+      "findingId": "DBP001-29c4232b56"
+    },
+    {
+      "id": "DBP002:id MonthlySnapshot(organizationId, month, snapshotId)",
+      "ruleId": "DBP002",
+      "subject": "id MonthlySnapshot(organizationId, month, snapshotId)",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 11,
+          "column": 3,
+          "detail": "@@id on [organizationId, month, snapshotId]"
+        },
+        {
+          "kind": "database",
+          "object": "public.monthly_snapshots",
+          "detail": "primary key monthly_snapshots_pkey on (organization_id, month, snapshot_id) guarantees uniqueness of (organization_id, month, snapshot_id)",
+          "constraint": "monthly_snapshots_pkey",
+          "columns": [
+            "organization_id",
+            "month",
+            "snapshot_id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP002:id Organization(id)",
+      "ruleId": "DBP002",
+      "subject": "id Organization(id)",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "organization.prisma",
+          "line": 2,
+          "column": 31,
+          "detail": "@id on [id]"
+        },
+        {
+          "kind": "database",
+          "object": "public.organizations",
+          "detail": "primary key organizations_pkey on (id) guarantees uniqueness of (id)",
+          "constraint": "organizations_pkey",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP002:id SnapshotSummary(id)",
+      "ruleId": "DBP002",
+      "subject": "id SnapshotSummary(id)",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 18,
+          "column": 26,
+          "detail": "@id on [id]"
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "primary key snapshot_summaries_pkey on (id) guarantees uniqueness of (id)",
+          "constraint": "snapshot_summaries_pkey",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP003:model MonthlySnapshot",
+      "ruleId": "DBP003",
+      "subject": "model MonthlySnapshot",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 2,
+          "column": 1,
+          "detail": "model MonthlySnapshot maps to table \"monthly_snapshots\""
+        },
+        {
+          "kind": "database",
+          "object": "public.monthly_snapshots",
+          "detail": "table found with 4 columns"
+        }
+      ]
+    },
+    {
+      "id": "DBP003:model Organization",
+      "ruleId": "DBP003",
+      "subject": "model Organization",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "organization.prisma",
+          "line": 1,
+          "column": 1,
+          "detail": "model Organization maps to table \"organizations\""
+        },
+        {
+          "kind": "database",
+          "object": "public.organizations",
+          "detail": "table found with 2 columns"
+        }
+      ]
+    },
+    {
+      "id": "DBP003:model SnapshotSummary",
+      "ruleId": "DBP003",
+      "subject": "model SnapshotSummary",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 17,
+          "column": 1,
+          "detail": "model SnapshotSummary maps to table \"snapshot_summaries\""
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "table found with 6 columns"
+        }
+      ]
+    },
+    {
+      "id": "DBP004:relation MonthlySnapshot.organization",
+      "ruleId": "DBP004",
+      "subject": "relation MonthlySnapshot.organization",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 8,
+          "column": 3,
+          "detail": "MonthlySnapshot.organization @relation(fields: [organizationId], references: [id])"
+        },
+        {
+          "kind": "prisma",
+          "file": "organization.prisma",
+          "line": 4,
+          "column": 3,
+          "detail": "Organization.snapshots is a list (1:n)"
+        },
+        {
+          "kind": "database",
+          "object": "public.monthly_snapshots",
+          "detail": "foreign key monthly_snapshots_organization_id_fkey (organization_id) -> public.organizations(id)",
+          "constraint": "monthly_snapshots_organization_id_fkey",
+          "columns": [
+            "organization_id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP004:relation SnapshotSummary.snapshot",
+      "ruleId": "DBP004",
+      "subject": "relation SnapshotSummary.snapshot",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 25,
+          "column": 3,
+          "detail": "SnapshotSummary.snapshot @relation(fields: [organizationId, month, snapshotId], references: [organizationId, month, snapshotId])"
+        },
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 9,
+          "column": 3,
+          "detail": "MonthlySnapshot.summary is not a list (1:1)"
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "foreign key snapshot_summaries_snapshot_fkey (organization_id, month, snapshot_id) -> public.monthly_snapshots(organization_id, month, snapshot_id)",
+          "constraint": "snapshot_summaries_snapshot_fkey",
+          "columns": [
+            "organization_id",
+            "month",
+            "snapshot_id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP005:relation MonthlySnapshot.organization",
+      "ruleId": "DBP005",
+      "subject": "relation MonthlySnapshot.organization",
+      "status": "not_applicable",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 8,
+          "column": 3,
+          "detail": "MonthlySnapshot.organization @relation(fields: [organizationId], references: [id])"
+        },
+        {
+          "kind": "prisma",
+          "file": "organization.prisma",
+          "line": 4,
+          "column": 3,
+          "detail": "Organization.snapshots is a list (1:n)"
+        }
+      ],
+      "reasonCode": "not_one_to_one",
+      "reason": "relation is not 1:1"
+    },
+    {
+      "id": "DBP005:relation SnapshotSummary.snapshot",
+      "ruleId": "DBP005",
+      "subject": "relation SnapshotSummary.snapshot",
+      "status": "fail",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 25,
+          "column": 3,
+          "detail": "SnapshotSummary.snapshot @relation(fields: [organizationId, month, snapshotId], references: [organizationId, month, snapshotId])"
+        },
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 9,
+          "column": 3,
+          "detail": "MonthlySnapshot.summary is not a list (1:1)"
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "no primary key, unique constraint or valid unique index on a subset of (organization_id, month, snapshot_id); existing keys: snapshot_summaries_pkey (id)",
+          "columns": [
+            "organization_id",
+            "month",
+            "snapshot_id"
+          ]
+        }
+      ],
+      "reasonCode": "uniqueness_not_guaranteed",
+      "findingId": "DBP005-29c4232b56"
+    },
+    {
+      "id": "DBP006:field MonthlySnapshot.createdAt",
+      "ruleId": "DBP006",
+      "subject": "field MonthlySnapshot.createdAt",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 6,
+          "column": 3,
+          "detail": "createdAt DateTime -> column \"created_at\""
+        },
+        {
+          "kind": "database",
+          "object": "public.monthly_snapshots",
+          "detail": "column \"created_at\" is NOT NULL",
+          "columns": [
+            "created_at"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field MonthlySnapshot.month",
+      "ruleId": "DBP006",
+      "subject": "field MonthlySnapshot.month",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 4,
+          "column": 3,
+          "detail": "month String -> column \"month\""
+        },
+        {
+          "kind": "database",
+          "object": "public.monthly_snapshots",
+          "detail": "column \"month\" is NOT NULL",
+          "columns": [
+            "month"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field MonthlySnapshot.organizationId",
+      "ruleId": "DBP006",
+      "subject": "field MonthlySnapshot.organizationId",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 3,
+          "column": 3,
+          "detail": "organizationId Int -> column \"organization_id\""
+        },
+        {
+          "kind": "database",
+          "object": "public.monthly_snapshots",
+          "detail": "column \"organization_id\" is NOT NULL",
+          "columns": [
+            "organization_id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field MonthlySnapshot.snapshotId",
+      "ruleId": "DBP006",
+      "subject": "field MonthlySnapshot.snapshotId",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 5,
+          "column": 3,
+          "detail": "snapshotId Int -> column \"snapshot_id\""
+        },
+        {
+          "kind": "database",
+          "object": "public.monthly_snapshots",
+          "detail": "column \"snapshot_id\" is NOT NULL",
+          "columns": [
+            "snapshot_id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field Organization.id",
+      "ruleId": "DBP006",
+      "subject": "field Organization.id",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "organization.prisma",
+          "line": 2,
+          "column": 3,
+          "detail": "id Int -> column \"id\""
+        },
+        {
+          "kind": "database",
+          "object": "public.organizations",
+          "detail": "column \"id\" is NOT NULL",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field Organization.name",
+      "ruleId": "DBP006",
+      "subject": "field Organization.name",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "organization.prisma",
+          "line": 3,
+          "column": 3,
+          "detail": "name String -> column \"name\""
+        },
+        {
+          "kind": "database",
+          "object": "public.organizations",
+          "detail": "column \"name\" is NOT NULL",
+          "columns": [
+            "name"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field SnapshotSummary.id",
+      "ruleId": "DBP006",
+      "subject": "field SnapshotSummary.id",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 18,
+          "column": 3,
+          "detail": "id Int -> column \"id\""
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "column \"id\" is NOT NULL",
+          "columns": [
+            "id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field SnapshotSummary.month",
+      "ruleId": "DBP006",
+      "subject": "field SnapshotSummary.month",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 20,
+          "column": 3,
+          "detail": "month String -> column \"month\""
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "column \"month\" is NOT NULL",
+          "columns": [
+            "month"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field SnapshotSummary.note",
+      "ruleId": "DBP006",
+      "subject": "field SnapshotSummary.note",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 23,
+          "column": 3,
+          "detail": "note String? -> column \"note\""
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "column \"note\" is NULLABLE",
+          "columns": [
+            "note"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field SnapshotSummary.organizationId",
+      "ruleId": "DBP006",
+      "subject": "field SnapshotSummary.organizationId",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 19,
+          "column": 3,
+          "detail": "organizationId Int -> column \"organization_id\""
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "column \"organization_id\" is NOT NULL",
+          "columns": [
+            "organization_id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field SnapshotSummary.snapshotId",
+      "ruleId": "DBP006",
+      "subject": "field SnapshotSummary.snapshotId",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 21,
+          "column": 3,
+          "detail": "snapshotId Int -> column \"snapshot_id\""
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "column \"snapshot_id\" is NOT NULL",
+          "columns": [
+            "snapshot_id"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DBP006:field SnapshotSummary.totalAmount",
+      "ruleId": "DBP006",
+      "subject": "field SnapshotSummary.totalAmount",
+      "status": "pass",
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 22,
+          "column": 3,
+          "detail": "totalAmount Decimal -> column \"total_amount\""
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "column \"total_amount\" is NOT NULL",
+          "columns": [
+            "total_amount"
+          ]
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "DBP001-29c4232b56",
+      "ruleId": "DBP001",
+      "severity": "error",
+      "title": "1:1 relation SnapshotSummary.snapshot has no Prisma uniqueness declaration on (organizationId, month, snapshotId)",
+      "subject": "relation SnapshotSummary.snapshot",
+      "groupId": "relation:SnapshotSummary.snapshot",
+      "relatedFindingIds": [
+        "DBP005-29c4232b56"
+      ],
+      "explanation": {
+        "observed": [
+          "SnapshotSummary.snapshot declares @relation(fields: [organizationId, month, snapshotId]).",
+          "The opposite field MonthlySnapshot.summary is not a list, so the relation is declared 1:1.",
+          "SnapshotSummary has no @unique/@@unique/@id/@@id on (organizationId, month, snapshotId)."
+        ],
+        "expected": "Prisma ORM 7 requires @@unique or @@id with exactly (organizationId, month, snapshotId) (same fields, same order) on the defining side of a 1:1 relation.",
+        "difference": "The 1:1 relation has no matching uniqueness declaration; prisma validate rejects this schema (P1012).",
+        "impact": "prisma generate / migrate cannot run on this schema; the intended cardinality (1:1 vs 1:n) is unresolved.",
+        "notChecked": [
+          "Which cardinality is correct for the business domain is not decided by db-preflight."
+        ]
+      },
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 25,
+          "column": 3,
+          "detail": "SnapshotSummary.snapshot @relation(fields: [organizationId, month, snapshotId], references: [organizationId, month, snapshotId])"
+        },
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 9,
+          "column": 3,
+          "detail": "MonthlySnapshot.summary is not a list (1:1)"
+        }
+      ],
+      "reviewOptions": [
+        "If one MonthlySnapshot can have several SnapshotSummary rows, consider declaring the back-relation as a list (summary SnapshotSummary[]), i.e. 1:n.",
+        "If 1:1 is intended, first confirm the database does not already contain duplicates for these columns, then review adding a matching uniqueness declaration together with a database constraint in a reviewed migration.",
+        "Do not add a uniqueness declaration only to silence P1012; see DBP005 for what the database actually enforces."
+      ]
+    },
+    {
+      "id": "DBP005-29c4232b56",
+      "ruleId": "DBP005",
+      "severity": "error",
+      "title": "1:1 relation SnapshotSummary.snapshot: public.snapshot_summaries(organization_id, month, snapshot_id) is not unique in the database",
+      "subject": "relation SnapshotSummary.snapshot",
+      "groupId": "relation:SnapshotSummary.snapshot",
+      "relatedFindingIds": [
+        "DBP001-29c4232b56"
+      ],
+      "explanation": {
+        "observed": [
+          "Prisma declares SnapshotSummary.snapshot as 1:1 (opposite field MonthlySnapshot.summary is not a list).",
+          "public.snapshot_summaries has no primary key, unique constraint or valid unique index on (organization_id, month, snapshot_id) or any subset of it.",
+          "Foreign key snapshot_summaries_snapshot_fkey (organization_id, month, snapshot_id) -> public.monthly_snapshots(organization_id, month, snapshot_id) exists; a foreign key alone does not make the referencing columns unique."
+        ],
+        "expected": "For a 1:1 relation, the referencing columns are unique in the database (a key on these columns or a subset).",
+        "difference": "The database structure allows several snapshot_summaries rows to reference the same MonthlySnapshot row.",
+        "impact": "The structure permits duplicates that Prisma's 1:1 API cannot represent. This does not mean duplicates currently exist.",
+        "notChecked": [
+          "Whether duplicate references currently exist (rows are not read).",
+          "Whether 1:1 or 1:n is the intended business rule."
+        ]
+      },
+      "evidence": [
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 25,
+          "column": 3,
+          "detail": "SnapshotSummary.snapshot @relation(fields: [organizationId, month, snapshotId], references: [organizationId, month, snapshotId])"
+        },
+        {
+          "kind": "prisma",
+          "file": "reporting.prisma",
+          "line": 9,
+          "column": 3,
+          "detail": "MonthlySnapshot.summary is not a list (1:1)"
+        },
+        {
+          "kind": "database",
+          "object": "public.snapshot_summaries",
+          "detail": "no primary key, unique constraint or valid unique index on a subset of (organization_id, month, snapshot_id); existing keys: snapshot_summaries_pkey (id)",
+          "columns": [
+            "organization_id",
+            "month",
+            "snapshot_id"
+          ]
+        }
+      ],
+      "reviewOptions": [
+        "If the business rule is 1:n, review changing the Prisma back-relation to a list; no database change is implied.",
+        "If the business rule is 1:1, a person should first query for existing duplicates, then review a migration that adds a unique constraint on these columns.",
+        "Adding UNIQUE is not an automatic fix: it fails if duplicates exist and changes write behaviour."
+      ]
+    }
+  ],
+  "findingGroups": [
+    {
+      "groupId": "relation:SnapshotSummary.snapshot",
+      "title": "Relation SnapshotSummary.snapshot (DBP001 + DBP005: one shared root cause)",
+      "findingIds": [
+        "DBP001-29c4232b56",
+        "DBP005-29c4232b56"
+      ]
+    }
+  ],
+  "coverage": {
+    "totals": {
+      "checks": 24,
+      "pass": 20,
+      "fail": 2,
+      "unknown": 0,
+      "not_applicable": 2
+    },
+    "unknownReasons": [],
+    "blockingDiagnostics": 0,
+    "completeWithinScope": true,
+    "notCovered": [
+      "Row data: table rows are never read, so existing duplicates or orphaned rows are not detected.",
+      "CHECK constraints, triggers, defaults, generated columns, RLS policies and privileges.",
+      "Migration safety, lock impact and production readiness.",
+      "Prisma Client runtime behaviour and generated client code.",
+      "Database objects outside the requested schemas."
+    ]
+  },
+  "safety": {
+    "databaseAccess": "none",
+    "readOnlyTransactionVerified": null,
+    "roleVerifiedNotSuperuser": null,
+    "catalogQueryIdsExecuted": null,
+    "prismaInputsUnchangedVerified": null,
+    "llmOrNetworkCalls": "none"
+  }
+}

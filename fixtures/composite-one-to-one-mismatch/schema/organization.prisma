@@ -1,0 +1,7 @@
+model Organization {
+  id        Int               @id @default(autoincrement())
+  name      String
+  snapshots MonthlySnapshot[]
+
+  @@map("organizations")
+}

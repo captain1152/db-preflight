@@ -1,0 +1,14 @@
+{
+  "name": "db-preflight",
+  "description": "Marketplace for the db-preflight Claude Code plugin (local/GitHub distribution).",
+  "owner": {
+    "name": "captain1152"
+  },
+  "plugins": [
+    {
+      "name": "db-preflight",
+      "source": "./plugins/claude/db-preflight",
+      "description": "Evidence-first PostgreSQL / Prisma ORM 7 diagnostics (bundled CLI; no database changes)."
+    }
+  ]
+}

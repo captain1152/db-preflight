@@ -1,0 +1,32 @@
+model Account {
+  id        Int      @id @map("account_id")
+  email     String   @unique @map("email_address")
+  managerId Int?     @map("manager_id")
+  manager   Account? @relation("AccountManager", fields: [managerId], references: [id])
+  reports   Account[] @relation("AccountManager")
+
+  events          Event[]
+  ownedReports    ReportEvent[] @relation("ReportOwner")
+  reviewedReports ReportEvent[] @relation("ReportReviewer")
+
+  @@map("accounts")
+  @@schema("core")
+}
+
+model Event {
+  id        Int       @id
+  accountId Int       @map("account_id")
+  kind      EventKind
+  account   Account   @relation(fields: [accountId], references: [id])
+
+  @@map("events")
+  @@schema("core")
+}
+
+enum EventKind {
+  CREATED
+  UPDATED
+
+  @@map("event_kind")
+  @@schema("core")
+}

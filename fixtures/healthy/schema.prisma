@@ -1,0 +1,44 @@
+// Synthetic fixture: the composite 1:1 relation is declared correctly and enforced by the database.
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+}
+
+model Organization {
+  id        Int               @id @default(autoincrement())
+  name      String
+  snapshots MonthlySnapshot[]
+
+  @@map("organizations")
+}
+
+model MonthlySnapshot {
+  organizationId Int      @map("organization_id")
+  month          String   @db.Char(7)
+  snapshotId     Int      @map("snapshot_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization     @relation(fields: [organizationId], references: [id])
+  summary      SnapshotSummary?
+
+  @@id([organizationId, month, snapshotId])
+  @@map("monthly_snapshots")
+}
+
+model SnapshotSummary {
+  id             Int     @id @default(autoincrement())
+  organizationId Int     @map("organization_id")
+  month          String  @db.Char(7)
+  snapshotId     Int     @map("snapshot_id")
+  totalAmount    Decimal @map("total_amount") @db.Decimal(12, 2)
+  note           String?
+
+  snapshot MonthlySnapshot @relation(fields: [organizationId, month, snapshotId], references: [organizationId, month, snapshotId], onDelete: Cascade)
+
+  @@unique([organizationId, month, snapshotId])
+  @@map("snapshot_summaries")
+}

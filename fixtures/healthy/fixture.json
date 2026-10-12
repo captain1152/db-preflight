@@ -1,0 +1,16 @@
+{
+  "description": "Same domain as composite-one-to-one-mismatch, with the exact @@unique on the 1:1 owning side and a matching UNIQUE constraint in the database. Single-file schema input.",
+  "schema": "schema.prisma",
+  "snapshot": "snapshot.json",
+  "dbSchemas": ["public"],
+  "defaultSchema": "public",
+  "expectedExitCode": 0,
+  "prismaValidate": "pass",
+  "expectedChecks": {
+    "DBP001:relation SnapshotSummary.snapshot": "pass",
+    "DBP005:relation SnapshotSummary.snapshot": "pass",
+    "DBP002:unique SnapshotSummary(organizationId, month, snapshotId)": "pass",
+    "DBP004:relation SnapshotSummary.snapshot": "pass"
+  },
+  "expectedFindingGroups": 0
+}

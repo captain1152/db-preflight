@@ -1,0 +1,9 @@
+// Synthetic fixture. All model names and data are invented.
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/client"
+}

@@ -1,0 +1,12 @@
+/// Same physical table name as core.events, different schema.
+model ReportEvent {
+  id         Int      @id @map("event_id")
+  ownerId    Int      @map("owner_id")
+  reviewerId Int?     @map("reviewer_id")
+  payload    Json?
+  owner      Account  @relation("ReportOwner", fields: [ownerId], references: [id])
+  reviewer   Account? @relation("ReportReviewer", fields: [reviewerId], references: [id])
+
+  @@map("events")
+  @@schema("reporting")
+}

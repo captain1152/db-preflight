@@ -1,0 +1,57 @@
+{
+  "name": "db-preflight",
+  "version": "0.1.0",
+  "description": "Evidence-first PostgreSQL / Prisma diagnostics for AI coding workflows.",
+  "license": "MIT",
+  "author": "이성민 (https://github.com/captain1152)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/captain1152/db-preflight.git"
+  },
+  "homepage": "https://github.com/captain1152/db-preflight#readme",
+  "bugs": {
+    "url": "https://github.com/captain1152/db-preflight/issues"
+  },
+  "private": true,
+  "type": "module",
+  "bin": {
+    "db-preflight": "dist/db-preflight.cjs"
+  },
+  "files": [
+    "dist/db-preflight.cjs",
+    "dist/THIRD_PARTY_LICENSES.txt",
+    "schemas",
+    "README.md",
+    "README.ko.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "packageManager": "pnpm@12.9.1",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "test": "vitest run --project unit --project e2e",
+    "test:unit": "vitest run --project unit",
+    "test:e2e": "vitest run --project e2e",
+    "test:integration": "vitest run --project integration",
+    "test:package": "node scripts/package-smoke.mjs",
+    "test:prisma": "node scripts/validate-fixtures-with-prisma.mjs",
+    "check:bundle": "node scripts/check-bundle-fresh.mjs",
+    "dev": "node --experimental-strip-types src/cli/main.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "^24.19.1",
+    "@types/pg": "8.23.1",
+    "esbuild": "0.28.2",
+    "pg": "8.23.1",
+    "prisma": "7.10.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  }
+}

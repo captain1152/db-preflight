@@ -1,0 +1,29 @@
+# Dependencies and build output
+node_modules/
+/dist/
+*.tgz
+coverage/
+
+# The plugin bundle IS committed: marketplace installs copy only the plugin directory.
+!plugins/claude/db-preflight/dist/
+
+# Secrets and real database artifacts: never commit
+.env
+.env.*
+!.env.example
+*.pgpass
+.pgpass
+# Real snapshots/reports may contain sensitive schema metadata.
+db-snapshot*.json
+*.snapshot.json
+db-preflight-report*.*
+report.json
+report.md
+*.log
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.claude/settings.local.json

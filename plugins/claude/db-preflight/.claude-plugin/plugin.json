@@ -1,0 +1,10 @@
+{
+  "name": "db-preflight",
+  "version": "0.1.0",
+  "description": "Evidence-first PostgreSQL / Prisma ORM 7 diagnostics. Runs the bundled db-preflight CLI and explains its report; it does not modify databases or Prisma files.",
+  "author": { "name": "이성민", "url": "https://github.com/captain1152" },
+  "homepage": "https://github.com/captain1152/db-preflight",
+  "repository": "https://github.com/captain1152/db-preflight",
+  "license": "MIT",
+  "keywords": ["postgresql", "prisma", "diagnostics", "schema", "relations"]
+}

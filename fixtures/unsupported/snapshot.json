@@ -1,0 +1,201 @@
+{
+  "snapshotVersion": 1,
+  "generator": {
+    "name": "db-preflight",
+    "version": "0.1.0"
+  },
+  "origin": "live",
+  "collectedAt": "2026-10-08T09:41:57.870Z",
+  "server": {
+    "version": "16.15",
+    "versionNum": 160015
+  },
+  "requestedSchemas": [
+    "public"
+  ],
+  "schemasFound": [
+    "public"
+  ],
+  "complete": true,
+  "gaps": [],
+  "readOnly": {
+    "verified": true,
+    "detail": "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; transaction_read_only = on"
+  },
+  "tables": [
+    {
+      "schema": "public",
+      "name": "_CustomerToTag",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "A",
+          "nullable": false
+        },
+        {
+          "name": "B",
+          "nullable": false
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "primary_key",
+          "name": "_CustomerToTag_AB_pkey",
+          "columns": [
+            "A",
+            "B"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "_CustomerToTag_A_fkey",
+          "columns": [
+            "A"
+          ],
+          "references": {
+            "schema": "public",
+            "table": "customers",
+            "columns": [
+              "id"
+            ]
+          },
+          "deferrable": false,
+          "validated": true,
+          "enforced": true
+        },
+        {
+          "name": "_CustomerToTag_B_fkey",
+          "columns": [
+            "B"
+          ],
+          "references": {
+            "schema": "public",
+            "table": "tags",
+            "columns": [
+              "id"
+            ]
+          },
+          "deferrable": false,
+          "validated": true,
+          "enforced": true
+        }
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "customers",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "id",
+          "nullable": false
+        },
+        {
+          "name": "email",
+          "nullable": false
+        },
+        {
+          "name": "deleted_at",
+          "nullable": true
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "unique_index",
+          "name": "customers_email_key",
+          "columns": [
+            "email"
+          ],
+          "includeColumns": [],
+          "partial": true,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        },
+        {
+          "kind": "primary_key",
+          "name": "customers_pkey",
+          "columns": [
+            "id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": []
+    },
+    {
+      "schema": "public",
+      "name": "tags",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "id",
+          "nullable": false
+        },
+        {
+          "name": "label",
+          "nullable": false
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "primary_key",
+          "name": "tags_pkey",
+          "columns": [
+            "id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": []
+    }
+  ],
+  "otherRelations": [
+    {
+      "schema": "public",
+      "name": "active_customers",
+      "kind": "view"
+    }
+  ]
+}

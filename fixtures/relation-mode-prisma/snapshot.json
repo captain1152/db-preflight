@@ -1,0 +1,108 @@
+{
+  "snapshotVersion": 1,
+  "generator": {
+    "name": "db-preflight",
+    "version": "0.1.0"
+  },
+  "origin": "live",
+  "collectedAt": "2026-10-08T09:41:57.653Z",
+  "server": {
+    "version": "16.15",
+    "versionNum": 160015
+  },
+  "requestedSchemas": [
+    "public"
+  ],
+  "schemasFound": [
+    "public"
+  ],
+  "complete": true,
+  "gaps": [],
+  "readOnly": {
+    "verified": true,
+    "detail": "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; transaction_read_only = on"
+  },
+  "tables": [
+    {
+      "schema": "public",
+      "name": "authors",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "id",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "nullable": false
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "primary_key",
+          "name": "authors_pkey",
+          "columns": [
+            "id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": []
+    },
+    {
+      "schema": "public",
+      "name": "posts",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "id",
+          "nullable": false
+        },
+        {
+          "name": "title",
+          "nullable": false
+        },
+        {
+          "name": "author_id",
+          "nullable": false
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "primary_key",
+          "name": "posts_pkey",
+          "columns": [
+            "id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": []
+    }
+  ],
+  "otherRelations": []
+}

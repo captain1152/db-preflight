@@ -1,0 +1,29 @@
+/// Parent: one row per (organization, month, snapshot). The composite key is unique.
+model MonthlySnapshot {
+  organizationId Int      @map("organization_id")
+  month          String   @db.Char(7)
+  snapshotId     Int      @map("snapshot_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization     @relation(fields: [organizationId], references: [id])
+  summary      SnapshotSummary? // back-relation is NOT a list => declared 1:1
+
+  @@id([organizationId, month, snapshotId])
+  @@map("monthly_snapshots")
+}
+
+/// Child: declared 1:1, but [organizationId, month, snapshotId] has no uniqueness
+/// declaration here (Prisma 7 rejects this with P1012) and no unique key in the DB.
+model SnapshotSummary {
+  id             Int     @id @default(autoincrement())
+  organizationId Int     @map("organization_id")
+  month          String  @db.Char(7)
+  snapshotId     Int     @map("snapshot_id")
+  totalAmount    Decimal @map("total_amount") @db.Decimal(12, 2)
+  note           String? // "strings // with comment markers" are not comments
+
+  snapshot MonthlySnapshot @relation(fields: [organizationId, month, snapshotId], references: [organizationId, month, snapshotId], onDelete: Cascade)
+
+  @@index([organizationId, month, snapshotId])
+  @@map("snapshot_summaries")
+}

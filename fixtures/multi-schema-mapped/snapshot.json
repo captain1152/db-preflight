@@ -1,0 +1,242 @@
+{
+  "snapshotVersion": 1,
+  "generator": {
+    "name": "db-preflight",
+    "version": "0.1.0"
+  },
+  "origin": "live",
+  "collectedAt": "2026-10-08T09:41:57.462Z",
+  "server": {
+    "version": "16.15",
+    "versionNum": 160015
+  },
+  "requestedSchemas": [
+    "core",
+    "reporting"
+  ],
+  "schemasFound": [
+    "core",
+    "reporting"
+  ],
+  "complete": true,
+  "gaps": [],
+  "readOnly": {
+    "verified": true,
+    "detail": "BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; transaction_read_only = on"
+  },
+  "tables": [
+    {
+      "schema": "core",
+      "name": "accounts",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "account_id",
+          "nullable": false
+        },
+        {
+          "name": "email_address",
+          "nullable": false
+        },
+        {
+          "name": "manager_id",
+          "nullable": true
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "unique_constraint",
+          "name": "accounts_email_address_key",
+          "columns": [
+            "email_address"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        },
+        {
+          "kind": "primary_key",
+          "name": "accounts_pkey",
+          "columns": [
+            "account_id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "accounts_manager_id_fkey",
+          "columns": [
+            "manager_id"
+          ],
+          "references": {
+            "schema": "core",
+            "table": "accounts",
+            "columns": [
+              "account_id"
+            ]
+          },
+          "deferrable": false,
+          "validated": true,
+          "enforced": true
+        }
+      ]
+    },
+    {
+      "schema": "core",
+      "name": "events",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "id",
+          "nullable": false
+        },
+        {
+          "name": "account_id",
+          "nullable": false
+        },
+        {
+          "name": "kind",
+          "nullable": false
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "primary_key",
+          "name": "events_pkey",
+          "columns": [
+            "id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "events_account_id_fkey",
+          "columns": [
+            "account_id"
+          ],
+          "references": {
+            "schema": "core",
+            "table": "accounts",
+            "columns": [
+              "account_id"
+            ]
+          },
+          "deferrable": false,
+          "validated": true,
+          "enforced": true
+        }
+      ]
+    },
+    {
+      "schema": "reporting",
+      "name": "events",
+      "kind": "table",
+      "inheritance": {
+        "isPartition": false,
+        "hasInheritanceChildren": false,
+        "inheritsFrom": []
+      },
+      "columns": [
+        {
+          "name": "event_id",
+          "nullable": false
+        },
+        {
+          "name": "owner_id",
+          "nullable": false
+        },
+        {
+          "name": "reviewer_id",
+          "nullable": true
+        },
+        {
+          "name": "payload",
+          "nullable": true
+        }
+      ],
+      "uniqueKeys": [
+        {
+          "kind": "primary_key",
+          "name": "events_pkey",
+          "columns": [
+            "event_id"
+          ],
+          "includeColumns": [],
+          "partial": false,
+          "expression": false,
+          "valid": true,
+          "deferrable": false,
+          "immediate": true,
+          "nullsNotDistinct": false,
+          "period": false
+        }
+      ],
+      "foreignKeys": [
+        {
+          "name": "events_owner_id_fkey",
+          "columns": [
+            "owner_id"
+          ],
+          "references": {
+            "schema": "core",
+            "table": "accounts",
+            "columns": [
+              "account_id"
+            ]
+          },
+          "deferrable": false,
+          "validated": true,
+          "enforced": true
+        },
+        {
+          "name": "events_reviewer_id_fkey",
+          "columns": [
+            "reviewer_id"
+          ],
+          "references": {
+            "schema": "core",
+            "table": "accounts",
+            "columns": [
+              "account_id"
+            ]
+          },
+          "deferrable": false,
+          "validated": true,
+          "enforced": true
+        }
+      ]
+    }
+  ],
+  "otherRelations": []
+}

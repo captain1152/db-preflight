@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://db-preflight.invalid/schemas/snapshot-v1.json",
+  "title": "db-preflight metadata snapshot, version 1",
+  "description": "Catalog metadata only (no row data). Snapshots may be sensitive: keep real snapshots out of version control.",
+  "type": "object",
+  "required": ["snapshotVersion", "generator", "origin", "collectedAt", "server", "requestedSchemas", "schemasFound", "complete", "tables"],
+  "properties": {
+    "snapshotVersion": { "const": 1 },
+    "generator": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": { "name": { "const": "db-preflight" }, "version": { "type": "string" } }
+    },
+    "origin": { "enum": ["live", "synthetic"] },
+    "collectedAt": { "type": "string", "description": "ISO 8601 time of collection (not of any later scan)." },
+    "server": {
+      "type": "object",
+      "required": ["version", "versionNum"],
+      "properties": { "version": { "type": ["string", "null"] }, "versionNum": { "type": ["integer", "null"] } }
+    },
+    "requestedSchemas": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "minItems": 1 },
+    "schemasFound": { "type": "array", "items": { "$ref": "#/$defs/identifier" } },
+    "complete": { "type": "boolean", "description": "True only if every catalog query succeeded and was understood." },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scope", "reason"],
+        "properties": { "scope": { "type": "string" }, "reason": { "type": "string" } }
+      }
+    },
+    "readOnly": {
+      "type": "object",
+      "required": ["verified", "detail"],
+      "properties": { "verified": { "type": "boolean" }, "detail": { "type": "string" } }
+    },
+    "tables": { "type": "array", "items": { "$ref": "#/$defs/table" } },
+    "otherRelations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["schema", "name", "kind"],
+        "properties": {
+          "schema": { "$ref": "#/$defs/identifier" },
+          "name": { "$ref": "#/$defs/identifier" },
+          "kind": { "enum": ["view", "materialized_view", "foreign_table"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "table": {
+      "type": "object",
+      "required": ["schema", "name", "kind", "inheritance", "columns", "uniqueKeys", "foreignKeys"],
+      "properties": {
+        "schema": { "$ref": "#/$defs/identifier" },
+        "name": { "$ref": "#/$defs/identifier" },
+        "kind": { "enum": ["table", "partitioned_table"] },
+        "inheritance": {
+          "type": "object",
+          "required": ["isPartition", "hasInheritanceChildren", "inheritsFrom"],
+          "properties": {
+            "isPartition": { "type": "boolean" },
+            "hasInheritanceChildren": { "type": "boolean" },
+            "inheritsFrom": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["schema", "table"],
+                "properties": { "schema": { "type": "string" }, "table": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "nullable"],
+            "properties": {
+              "name": { "$ref": "#/$defs/identifier" },
+              "nullable": { "type": "boolean" },
+              "notNullUnvalidated": { "type": "boolean" },
+              "domainType": { "type": "boolean", "description": "Column uses a domain; its nullability is not evaluated." }
+            }
+          }
+        },
+        "uniqueKeys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["kind", "name", "columns", "includeColumns", "partial", "expression", "valid", "deferrable", "immediate"],
+            "properties": {
+              "kind": { "enum": ["primary_key", "unique_constraint", "unique_index", "exclusion_constraint"] },
+              "name": { "$ref": "#/$defs/identifier" },
+              "columns": {
+                "type": ["array", "null"],
+                "items": { "$ref": "#/$defs/identifier" },
+                "description": "Ordered key columns; null for expression keys."
+              },
+              "includeColumns": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "description": "INCLUDE columns; never part of the key." },
+              "partial": { "type": "boolean" },
+              "expression": { "type": "boolean" },
+              "valid": { "type": "boolean" },
+              "deferrable": { "type": "boolean" },
+              "immediate": { "type": "boolean" },
+              "nullsNotDistinct": { "type": "boolean" },
+              "period": { "type": "boolean" }
+            }
+          }
+        },
+        "foreignKeys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "columns", "references", "deferrable", "validated"],
+            "properties": {
+              "name": { "$ref": "#/$defs/identifier" },
+              "columns": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/identifier" },
+                "minItems": 1,
+                "uniqueItems": true,
+                "description": "columns[i] references references.columns[i]."
+              },
+              "references": {
+                "type": "object",
+                "required": ["schema", "table", "columns"],
+                "properties": {
+                  "schema": { "$ref": "#/$defs/identifier" },
+                  "table": { "$ref": "#/$defs/identifier" },
+                  "columns": { "type": "array", "items": { "$ref": "#/$defs/identifier" }, "minItems": 1, "uniqueItems": true }
+                }
+              },
+              "deferrable": { "type": "boolean" },
+              "validated": { "type": "boolean" },
+              "enforced": { "type": "boolean" },
+              "period": { "type": "boolean", "description": "PostgreSQL 18 temporal (PERIOD) foreign key." }
+            }
+          }
+        }
+      }
+    }
+  }
+}

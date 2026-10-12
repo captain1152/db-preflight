@@ -1,0 +1,21 @@
+{
+  "description": "SnapshotSummary declares a 1:1 relation to MonthlySnapshot over [organizationId, month, snapshotId] without any uniqueness declaration (Prisma 7 P1012), and the database has a matching FK but no unique key on the three columns.",
+  "schema": "schema",
+  "snapshot": "snapshot.json",
+  "dbSchemas": ["public"],
+  "defaultSchema": "public",
+  "expectedExitCode": 1,
+  "prismaValidate": "fail-P1012",
+  "prismaExpectedError": "A one-to-one relation must use unique fields on the defining side",
+  "expectedChecks": {
+    "DBP001:relation SnapshotSummary.snapshot": "fail",
+    "DBP005:relation SnapshotSummary.snapshot": "fail",
+    "DBP004:relation SnapshotSummary.snapshot": "pass",
+    "DBP001:relation MonthlySnapshot.organization": "not_applicable",
+    "DBP004:relation MonthlySnapshot.organization": "pass",
+    "DBP002:id MonthlySnapshot(organizationId, month, snapshotId)": "pass",
+    "DBP003:model SnapshotSummary": "pass",
+    "DBP006:field SnapshotSummary.note": "pass"
+  },
+  "expectedFindingGroups": 1
+}

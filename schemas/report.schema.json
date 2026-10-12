@@ -1,0 +1,205 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://db-preflight.invalid/schemas/report-v1.json",
+  "title": "db-preflight report, version 1",
+  "type": "object",
+  "required": [
+    "reportVersion",
+    "toolVersion",
+    "generatedAt",
+    "mode",
+    "scope",
+    "prisma",
+    "database",
+    "result",
+    "checks",
+    "findings",
+    "findingGroups",
+    "coverage",
+    "safety"
+  ],
+  "properties": {
+    "reportVersion": { "const": 1 },
+    "toolVersion": { "type": "string" },
+    "generatedAt": { "type": "string", "description": "Volatile: time the report was generated. Exclude from comparisons." },
+    "mode": { "enum": ["live", "snapshot", "demo"] },
+    "scope": {
+      "type": "object",
+      "required": ["dbSchemas", "defaultSchema", "rules"],
+      "properties": {
+        "dbSchemas": { "type": "array", "items": { "type": "string" } },
+        "defaultSchema": { "type": ["string", "null"] },
+        "rules": { "type": "array", "items": { "$ref": "#/$defs/ruleId" } }
+      }
+    },
+    "prisma": {
+      "type": "object",
+      "required": ["ormMajorAssumed", "inputKind", "files", "skipped", "datasource", "counts", "diagnostics"],
+      "properties": {
+        "ormMajorAssumed": { "const": 7 },
+        "inputKind": { "enum": ["file", "directory"] },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "sha256", "bytes"],
+            "properties": { "path": { "type": "string" }, "sha256": { "type": "string" }, "bytes": { "type": "integer" } }
+          }
+        },
+        "skipped": { "type": "array", "items": { "type": "object", "required": ["path", "reason"] } },
+        "datasource": {
+          "type": "object",
+          "required": ["found", "provider", "relationMode", "relationModeSource", "schemas"],
+          "properties": {
+            "found": { "type": "boolean" },
+            "provider": { "type": ["string", "null"] },
+            "relationMode": { "type": ["string", "null"] },
+            "relationModeSource": { "enum": ["explicit", "default", "unknown"] },
+            "schemas": { "type": ["array", "null"], "items": { "type": "string" } }
+          }
+        },
+        "counts": { "type": "object", "required": ["models", "views", "enums", "relations"] },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["code", "severity", "message"],
+            "properties": { "severity": { "enum": ["blocking", "warning", "info"] } }
+          }
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "required": ["source", "snapshotOrigin", "collectedAt", "serverVersion", "requestedSchemas", "schemasFound", "collectionComplete", "gaps", "note"],
+      "properties": {
+        "source": { "enum": ["live", "snapshot", "demo"] },
+        "snapshotOrigin": { "enum": ["live", "synthetic", null] },
+        "collectedAt": { "type": "string" },
+        "serverVersion": { "type": ["string", "null"] },
+        "collectionComplete": { "type": "boolean" }
+      }
+    },
+    "result": {
+      "type": "object",
+      "required": ["status", "exitCode", "summary", "disclaimer"],
+      "properties": {
+        "status": { "enum": ["no_mismatch_in_checked_scope", "mismatch_found", "inconclusive"] },
+        "exitCode": { "enum": [0, 1, 3] },
+        "summary": { "type": "string" },
+        "disclaimer": { "type": "string" }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "ruleId", "subject", "status", "evidence"],
+        "properties": {
+          "id": { "type": "string" },
+          "ruleId": { "$ref": "#/$defs/ruleId" },
+          "subject": { "type": "string" },
+          "status": { "enum": ["pass", "fail", "unknown", "not_applicable"] },
+          "reasonCode": { "type": "string" },
+          "reason": { "type": "string" },
+          "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+          "findingId": { "type": "string" }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "ruleId", "severity", "title", "subject", "groupId", "relatedFindingIds", "explanation", "evidence", "reviewOptions"],
+        "properties": {
+          "id": { "type": "string" },
+          "ruleId": { "$ref": "#/$defs/ruleId" },
+          "severity": { "enum": ["error", "warning"] },
+          "title": { "type": "string" },
+          "subject": { "type": "string" },
+          "groupId": { "type": "string" },
+          "relatedFindingIds": { "type": "array", "items": { "type": "string" } },
+          "explanation": {
+            "type": "object",
+            "required": ["observed", "expected", "difference", "impact", "notChecked"],
+            "properties": {
+              "observed": { "type": "array", "items": { "type": "string" } },
+              "expected": { "type": "string" },
+              "difference": { "type": "string" },
+              "impact": { "type": "string" },
+              "notChecked": { "type": "array", "items": { "type": "string" } }
+            }
+          },
+          "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+          "reviewOptions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "findingGroups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["groupId", "title", "findingIds"],
+        "properties": { "groupId": { "type": "string" }, "title": { "type": "string" }, "findingIds": { "type": "array", "items": { "type": "string" } } }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["totals", "unknownReasons", "blockingDiagnostics", "completeWithinScope", "notCovered"],
+      "properties": {
+        "totals": {
+          "type": "object",
+          "required": ["checks", "pass", "fail", "unknown", "not_applicable"],
+          "properties": {
+            "checks": { "type": "integer" },
+            "pass": { "type": "integer" },
+            "fail": { "type": "integer" },
+            "unknown": { "type": "integer" },
+            "not_applicable": { "type": "integer" }
+          }
+        },
+        "unknownReasons": { "type": "array", "items": { "type": "object", "required": ["reasonCode", "count", "example"] } },
+        "blockingDiagnostics": { "type": "integer" },
+        "completeWithinScope": { "type": "boolean" },
+        "notCovered": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "safety": {
+      "type": "object",
+      "required": [
+        "databaseAccess",
+        "readOnlyTransactionVerified",
+        "roleVerifiedNotSuperuser",
+        "catalogQueryIdsExecuted",
+        "prismaInputsUnchangedVerified",
+        "llmOrNetworkCalls"
+      ],
+      "properties": {
+        "databaseAccess": { "enum": ["none", "live_catalog_metadata"] },
+        "readOnlyTransactionVerified": { "type": ["boolean", "null"] },
+        "roleVerifiedNotSuperuser": { "type": ["boolean", "null"] },
+        "catalogQueryIdsExecuted": { "type": ["array", "null"], "items": { "type": "string" } },
+        "prismaInputsUnchangedVerified": { "type": ["boolean", "null"] },
+        "llmOrNetworkCalls": { "const": "none" }
+      }
+    }
+  },
+  "$defs": {
+    "ruleId": { "enum": ["DBP001", "DBP002", "DBP003", "DBP004", "DBP005", "DBP006"] },
+    "evidence": {
+      "type": "object",
+      "required": ["kind", "detail"],
+      "properties": {
+        "kind": { "enum": ["prisma", "database", "note"] },
+        "file": { "type": "string" },
+        "line": { "type": "integer" },
+        "column": { "type": "integer" },
+        "object": { "type": "string" },
+        "constraint": { "type": "string" },
+        "columns": { "type": "array", "items": { "type": "string" } },
+        "detail": { "type": "string" }
+      }
+    }
+  }
+}
