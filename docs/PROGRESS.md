@@ -73,6 +73,10 @@ the destination contains non-ASCII characters (the plugin copy landed in `dbp sm
 does not use `cpSync`. Workflow actions moved from v4 to v5 (Node 24 runtime) to clear the Node 20 deprecation
 warnings.
 
+Third run (run 38224740692, `c3b203f`): all jobs green, including Windows Node 22/24, except the Node 20.19 bundled-runtime
+job: `actions/setup-node@v5` enables package-manager caching automatically from the `packageManager` field and then
+needs pnpm, which that job intentionally does not install. Fixed with `package-manager-cache: false` on that job.
+
 A Codex review of the IR-009 … IR-015 fixes (3 plan-review rounds, approved) and two fresh-session inspections of the
 resulting diff found further defects, fixed with regression tests in `tests/unit/inspection-regressions.test.ts` and
 `tests/unit/discover.test.ts` (each new test except RV-001/RV-008 was run against the

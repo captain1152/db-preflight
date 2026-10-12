@@ -45,6 +45,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: "20.19"
+          # This job installs nothing; v5 would otherwise auto-cache via package.json "packageManager" and need pnpm.
+          package-manager-cache: false
       - name: Demo exits 1 (intentional mismatch) and healthy exits 0
         shell: bash
         run: |
