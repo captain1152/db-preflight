@@ -66,7 +66,9 @@ The integration tests run every live check as such a role and assert that it can
 file is published with a no-clobber hard link (or an atomic rename with `--force`), so nothing is ever written through
 an existing file, symlink or hard link at the destination. Residual risk: an attacker able to replace the destination's
 parent directory between the re-check and the rename. Every error message is redacted at the output boundary.
-Snapshots that claim `complete: true` while recording gaps are rejected.
+Snapshots that claim `complete: true` while recording gaps, or record a gap whose scope is neither `*` nor a requested
+schema, are rejected. When the live worker exits without a result, at most 500 characters of its redacted stderr are
+shown (redaction runs before truncation), and none if its stderr exceeded the 64 KiB collection limit.
 
 Database identifiers, paths and snapshot contents are untrusted. Text output strips ANSI/OSC sequences and control
 characters (including bidi overrides); Markdown output escapes Markdown/HTML and uses code spans that cannot be

@@ -11,8 +11,8 @@ something, so that a wrong automatic fix is not applied.
 [한국어 문서 (README.ko.md)](README.ko.md) · [Docs index](docs/index.md) · [Rules](docs/rules.md) ·
 [Security](docs/security.md) · [Compatibility](docs/compatibility.md)
 
-> Status: v0.1.0, not yet published to npm or any marketplace. Commands below run from a local build or
-> from the plugin directory. `npx db-preflight` does **not** work yet.
+> Status: v0.1.0 (pre-release). Not published to npm: `npx db-preflight` does **not** work yet. The Claude Code
+> plugin installs from this repository's marketplace (see [Claude Code plugin](#claude-code-plugin)).
 
 ## First run (no database, no Docker, no network)
 
@@ -170,9 +170,17 @@ claude --plugin-dir ./plugins/claude/db-preflight
 /db-preflight:explain ./report.json
 ```
 
-From a local marketplace checkout: `claude plugin marketplace add ./` then
-`claude plugin install db-preflight@db-preflight`. GitHub marketplace distribution is prepared but not
-published. Reports read by Claude become part of the conversation; the CLI itself makes no network calls.
+Install from this repository's marketplace:
+
+```bash
+claude plugin marketplace add captain1152/db-preflight
+claude plugin install db-preflight@db-preflight
+# or, inside Claude Code 2.1.275+, in one step:
+/plugin install db-preflight --marketplace captain1152/db-preflight
+```
+
+From a local checkout, use `claude plugin marketplace add ./` instead. Requires Node.js >= 20.19 on PATH. Reports read
+by Claude become part of the conversation; the CLI itself makes no network calls.
 
 ## Development
 

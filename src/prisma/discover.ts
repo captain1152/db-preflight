@@ -84,15 +84,17 @@ export function discoverPrismaFiles(input: string, limits: DiscoveryLimits = DIS
         const childAbs = join(dir, name);
         const childRel = rel ? `${rel}/${name}` : name;
         const cst = lstatSync(childAbs);
+        // Name-based exclusions apply before symlink classification: an excluded name is out of
+        // scope whether it is a directory or a link to one, and its target is never followed (REV-002).
+        if ((cst.isDirectory() || cst.isSymbolicLink()) && EXCLUDED_DIRS.has(name)) {
+          skipped.push({ path: childRel, reason: "excluded directory" });
+          continue;
+        }
         if (cst.isSymbolicLink()) {
           skipped.push({ path: childRel, reason: "symbolic link not followed" });
           continue;
         }
         if (cst.isDirectory()) {
-          if (EXCLUDED_DIRS.has(name)) {
-            skipped.push({ path: childRel, reason: "excluded directory" });
-            continue;
-          }
           walk(childAbs, childRel, depth + 1);
         } else if (cst.isFile() && name.toLowerCase().endsWith(".prisma")) {
           found.push({ relPath: childRel, absPath: childAbs });

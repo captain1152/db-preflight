@@ -27,3 +27,10 @@ Thumbs.db
 .idea/
 .vscode/
 .claude/settings.local.json
+
+# Internal process documents and loop artifacts (kept locally, not published)
+/DB_PREFLIGHT_CLAUDE_OPUS_5_5_PROMPT.md
+/docs/EXECUTION_PLAN.md
+/docs/PLAN-REVIEW-LOG.md
+/.claudex/
+.claude/scheduled_tasks.lock

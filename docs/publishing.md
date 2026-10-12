@@ -1,7 +1,7 @@
-# Publishing (not done — preparation only)
+# Publishing
 
-Nothing has been published: no npm release, no GitHub push, no marketplace submission. This page lists what was
-verified locally and what the owner must decide before any publication.
+The owner pushed the repository to the public GitHub repository `captain1152/db-preflight` (commit `690d593`). No npm
+release, tag or Anthropic directory submission has been made. This page lists what was verified and what remains.
 
 ## Distribution strategy
 
@@ -14,17 +14,18 @@ verified locally and what the owner must decide before any publication.
 - **Marketplace**: `.claude-plugin/marketplace.json` at the repository root lists the plugin with
   `"source": "./plugins/claude/db-preflight"`.
 
-## Verification status (2026-10-08)
+## Verification status (2026-10-12)
 
 | Item | Status |
 |---|---|
-| `claude plugin validate plugins/claude/db-preflight` | passed with 1 warning (no `author`, intentionally left for the owner) |
-| `claude plugin validate .` (marketplace) | passed with the same warning |
+| `claude plugin validate --strict plugins/claude/db-preflight` | passed, no warnings or advice |
+| `claude plugin validate .` (marketplace) | passed |
 | Plugin dir copied alone to a temp path with spaces/Korean, demo + offline scans, PowerShell | verified (`pnpm test:package`) |
 | `npm pack` tarball extracted elsewhere, demo without `node_modules` | verified (`pnpm test:package`) |
 | Local load with `claude --plugin-dir` and invoking the skills | see "Claude load check" below |
-| `claude plugin marketplace add` / `claude plugin install` | **not run** (would change the user's Claude configuration) |
-| GitHub-hosted marketplace (`/plugin marketplace add owner/repo`) | **not verified** (nothing pushed) |
+| `claude plugin marketplace add` / `claude plugin install` from the local checkout | verified at local scope in a temporary project, then removed (see `docs/PROGRESS.md`) |
+| GitHub-hosted marketplace (`claude plugin marketplace add captain1152/db-preflight`) | **not verified** |
+| GitHub Actions | first run on `690d593`: everything green except Windows `pnpm test:package` (fixed afterwards; re-run pending push) |
 
 ### Claude load check
 
@@ -36,16 +37,18 @@ Decided on 2026-10-09:
 
 - Copyright holder: 이성민 (`LICENSE`, rebuilt into `plugins/claude/db-preflight/dist/LICENSE`).
 - GitHub repository: `captain1152/db-preflight` (`git remote add origin git@github.com:captain1152/db-preflight.git`;
-  nothing pushed). `repository`, `homepage`, `bugs`, `author` set in `package.json` and `plugin.json`.
+  pushed by the owner). `repository`, `homepage`, `bugs`, `author` set in `package.json` and `plugin.json`.
 - Marketplace owner: `captain1152`; marketplace name `db-preflight`.
 - npm package name: `db-preflight` (unscoped). On 2026-10-09 `npm view db-preflight` returned 404 (not taken);
   npm may still reject it as too similar to an existing name, which is only known at publish time. Fallback:
   `@captain1152/db-preflight` (needs `--access public`). `"private": true` stays until publishing is intended.
 - Security contact: GitHub private vulnerability reporting (enable it in the repository settings after creation).
 
-Still open:
+Decided on 2026-10-12:
 
-1. Whether to enable the PostgreSQL integration job on every PR or only on main (it needs Docker on the runner).
+- The PostgreSQL integration job runs on every PR and on pushes to main (GitHub's ubuntu runners provide Docker).
+- Internal process documents (original task prompt, execution plan, review log) are kept locally and are not
+  tracked; they remain in the history of `690d593` (no history rewrite; they contain no secrets).
 
 ## Pre-publication checklist
 
@@ -53,10 +56,25 @@ Still open:
 - [ ] `git status` clean; no `.env`, real snapshots, reports or logs tracked (`git ls-files | grep -Ei "snapshot|report|\.env"` shows only fixtures/examples).
 - [ ] `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm test:package && pnpm check:bundle`.
 - [ ] `pnpm test:prisma` and `pnpm test:integration` pass (Docker).
-- [ ] CI green on Linux and Windows (first CI run happens only after pushing; it has not run yet).
+- [ ] CI green on Linux and Windows (first run on `690d593`: Windows package smoke failed; fix pending push).
 - [ ] `claude plugin validate plugins/claude/db-preflight` and `claude plugin validate .` pass.
 - [ ] Manual: `claude --plugin-dir ./plugins/claude/db-preflight`, run `/db-preflight:scan demo` and `/db-preflight:explain <report>`.
 - [ ] README examples regenerated from the current build (`docs/examples/`), no unmeasured numbers or badges.
 - [ ] `CHANGELOG.md` dated; version consistent in `package.json`, `plugin.json`, CLI `--version`.
 - [ ] Dependency licenses reviewed (`dist/THIRD_PARTY_LICENSES.txt`: MIT/ISC only at the time of writing).
 - [ ] Then, and only then: push, tag, publish to npm, submit/announce the marketplace.
+
+## Marketplace routes
+
+1. **Own GitHub marketplace** (prepared). `.claude-plugin/marketplace.json` lists the plugin; anyone can install from the
+   public repository with `claude plugin marketplace add captain1152/db-preflight` and
+   `claude plugin install db-preflight@db-preflight` (or `/plugin install db-preflight --marketplace
+   captain1152/db-preflight` inside Claude Code 2.1.275+). Because `plugin.json` sets `version`, every release after the
+   first tag must bump it, or `claude plugin update` keeps the old copy. Version policy (owner, 2026-10-12): `690d593`
+   was pushed untagged and unannounced with version 0.1.0; the first tag `v0.1.0` goes on the corrected commit, so an
+   install of `690d593` (if any) does not receive the fixes through `claude plugin update` and must be reinstalled.
+2. **Anthropic directory** (not submitted). Submission goes through the developer portal at
+   <https://claude.ai/directory/manage> (paid claude.ai plan) after `claude plugin validate --strict` and the
+   pre-submission checklist on claude.com. The skills run a local `node` binary and read a local environment variable,
+   so the plugin is effectively Claude Code-only; check the component support table before submitting. The official
+   `claude-plugins-official` marketplace does not take portal submissions.

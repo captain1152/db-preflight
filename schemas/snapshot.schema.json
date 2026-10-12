@@ -27,7 +27,10 @@
       "items": {
         "type": "object",
         "required": ["scope", "reason"],
-        "properties": { "scope": { "type": "string" }, "reason": { "type": "string" } }
+        "properties": {
+          "scope": { "type": "string", "description": "\"*\" (whole collection) or one of requestedSchemas; any other value is rejected." },
+          "reason": { "type": "string" }
+        }
       }
     },
     "readOnly": {
@@ -122,8 +125,7 @@
                 "type": "array",
                 "items": { "$ref": "#/$defs/identifier" },
                 "minItems": 1,
-                "uniqueItems": true,
-                "description": "columns[i] references references.columns[i]."
+                "description": "columns[i] references references.columns[i]. Referencing columns may repeat (PostgreSQL allows child(a, a) -> parent(x, y)); referenced columns may not."
               },
               "references": {
                 "type": "object",

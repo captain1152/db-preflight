@@ -672,7 +672,10 @@ export function runEngine(input: EngineInput): EngineOutput {
     const ev = [...relEv];
     const targetName = targetModel.dbName;
     const sameTarget = t.foreignKeys.filter((k) => k.references.schema === targetSchema && k.references.table === targetName);
-    const exact = sameTarget.find((k) => k.columns.length === srcCols.length && pairKey(k.columns, k.references.columns) === expectedPairs);
+    // Several FKs can match; any validated, enforced, non-PERIOD one proves the correspondence, so
+    // constraint names or snapshot order must not decide the result (RV-005).
+    const exactAll = sameTarget.filter((k) => k.columns.length === srcCols.length && pairKey(k.columns, k.references.columns) === expectedPairs);
+    const exact = exactAll.find((k) => k.validated && k.enforced && !k.period) ?? exactAll[0];
     const expectedText = `${t.schema}.${t.name}${cols(srcCols)} -> ${targetSchema}.${targetName}${cols(dstCols)}`;
     if (exact) {
       ev.push(

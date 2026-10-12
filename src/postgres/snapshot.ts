@@ -112,8 +112,10 @@ function readForeignKey(v: Json, p: string): DbForeignKey {
     enforced: bool(o.enforced ?? true, `${p}.enforced`),
   };
   if (o.period !== undefined) fk.period = bool(o.period, `${p}.period`);
-  if (new Set(fk.columns).size !== fk.columns.length || new Set(fk.references.columns).size !== fk.references.columns.length) {
-    throw new SnapshotInvalid(p, "foreign key column lists must not repeat a column");
+  // PostgreSQL rejects repeated referenced columns but accepts repeated referencing columns,
+  // e.g. child(a, a) -> parent(x, y); the engine compares the full pair multiset (RV-002).
+  if (new Set(fk.references.columns).size !== fk.references.columns.length) {
+    throw new SnapshotInvalid(`${p}.references.columns`, "referenced columns must not repeat a column");
   }
   if (fk.columns.length === 0 || fk.columns.length !== fk.references.columns.length) {
     throw new SnapshotInvalid(p, "foreign key columns and referenced columns must be non-empty and equally long");
@@ -199,7 +201,11 @@ export function parseSnapshot(raw: Json): SnapshotFile {
   });
   const gaps = arr(o.gaps ?? [], "$.gaps", 10_000).map((g, i) => {
     const go = obj(g, `$.gaps[${i}]`);
-    return { scope: str(go.scope, `$.gaps[${i}].scope`), reason: str(go.reason, `$.gaps[${i}].reason`, 2000) };
+    const scope = str(go.scope, `$.gaps[${i}].scope`);
+    // An unrecognized scope cannot be attributed to a schema, so restricting the scope must
+    // never be able to discard it (RV-003).
+    if (scope !== "*" && !requested.has(scope)) throw new SnapshotInvalid(`$.gaps[${i}].scope`, 'must be "*" or one of requestedSchemas');
+    return { scope, reason: str(go.reason, `$.gaps[${i}].reason`, 2000) };
   });
   if (o.complete === true && gaps.length > 0) {
     // Contradictory evidence is rejected rather than trusted (inspection IR-006).
@@ -265,9 +271,11 @@ export function restrictScope(db: DatabaseModel, schemas: string[]): DatabaseMod
     throw new DbpError("SCOPE_NOT_IN_SNAPSHOT", `--schemas includes schemas that the snapshot did not collect: ${missing.join(", ")}`);
   }
   const keep = new Set(schemas);
-  const keptGaps = db.gaps.filter((g) => g.scope === "*" || keep.has(g.scope));
+  const recognized = (g: { scope: string }) => g.scope === "*" || db.requestedSchemas.includes(g.scope);
+  const keptGaps = db.gaps.filter((g) => !recognized(g) || g.scope === "*" || keep.has(g.scope));
   // Incompleteness explained only by gaps in excluded schemas does not affect the retained scope;
-  // unexplained incompleteness (no gaps recorded) is preserved (inspection IR-015).
+  // unexplained incompleteness (no gaps recorded) is preserved (inspection IR-015), and a gap with
+  // an unrecognized scope is never dropped (RV-003).
   const complete = db.complete || (db.gaps.length > 0 && keptGaps.length === 0);
   return {
     ...db,

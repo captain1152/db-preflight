@@ -13,3 +13,15 @@ All notable changes are documented here. This project follows [Semantic Versioni
 - Claude Code plugin `db-preflight` with `/db-preflight:scan` and `/db-preflight:explain`, shipping the bundled CLI.
 - JSON Schemas for report and snapshot; synthetic fixtures; unit, e2e, integration (PostgreSQL 16 and 18) and
   package smoke tests; GitHub Actions workflow.
+
+### Fixed (before release, from independent review)
+- Live worker failures: secrets are redacted before truncation, including the decoded password; stderr is not shown
+  when it exceeded the collection limit.
+- Snapshots accept repeated referencing foreign-key columns (valid in PostgreSQL); referenced columns stay distinct.
+- Snapshot gaps must be scoped to `*` or a requested schema, so `--schemas` cannot discard an unattributed gap.
+- An unreadable datasource statement (including an unclosed block) or a repeated `relationMode` makes the relation
+  mode unknown instead of assuming `foreignKeys` or the last value.
+- Schema discovery treats links named like excluded directories (`node_modules`, `generated`, ...) as excluded, so they
+  no longer make a scan inconclusive.
+- DBP004 accepts any validated, enforced matching foreign key regardless of constraint name order.
+- `pnpm test:package` works with GNU tar (Git Bash) and temp paths containing spaces on Windows.

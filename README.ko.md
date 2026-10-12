@@ -10,8 +10,8 @@ DB와 Prisma 파일은 절대 변경하지 않습니다. 목적은 "AI가 DB를 
 [English README](README.md) · [문서 목록](docs/index.md) · [규칙](docs/rules.md) · [보안](docs/security.md) ·
 [호환성](docs/compatibility.md)
 
-> 상태: v0.1.0. npm·마켓플레이스에 아직 게시되지 않았습니다. 아래 명령은 로컬 빌드 또는 플러그인 폴더에서
-> 실행합니다. `npx db-preflight`는 **아직 동작하지 않습니다.**
+> 상태: v0.1.0 (정식 릴리스 전). npm에는 게시되지 않았으므로 `npx db-preflight`는 **아직 동작하지 않습니다.**
+> Claude Code 플러그인은 이 저장소의 마켓플레이스에서 설치할 수 있습니다([Claude Code 플러그인](#claude-code-플러그인) 참고).
 
 ## 첫 실행 (DB·Docker·네트워크 불필요)
 
@@ -125,6 +125,17 @@ claude --plugin-dir ./plugins/claude/db-preflight
 /db-preflight:scan --schema ./prisma/schema --snapshot ./db-snapshot.json --default-schema public
 /db-preflight:explain ./report.json
 ```
+
+이 저장소의 마켓플레이스에서 설치:
+
+```powershell
+claude plugin marketplace add captain1152/db-preflight
+claude plugin install db-preflight@db-preflight
+# 또는 Claude Code 2.1.275 이상에서 한 번에:
+/plugin install db-preflight --marketplace captain1152/db-preflight
+```
+
+로컬 체크아웃에서는 `claude plugin marketplace add ./`를 사용합니다. PATH에 Node.js 20.19 이상이 필요합니다.
 
 Claude가 읽은 report 내용(스키마·테이블·컬럼 이름)은 대화 문맥에 포함됩니다. CLI 자체는 외부 전송을 하지 않지만,
 그것이 "Claude가 로컬에서만 처리한다"는 뜻은 아닙니다. 검증 상태는 [publishing 문서](docs/publishing.md)에 정리했습니다.

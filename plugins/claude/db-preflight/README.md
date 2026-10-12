@@ -2,6 +2,15 @@
 
 Thin interface over the bundled `dist/db-preflight.cjs` CLI (requires Node.js >= 20.19 on PATH).
 
+Install (Claude Code 2.1.275 or later):
+
+```
+/plugin install db-preflight --marketplace captain1152/db-preflight
+```
+
+Or from a shell: `claude plugin marketplace add captain1152/db-preflight`, then
+`claude plugin install db-preflight@db-preflight`.
+
 - `/db-preflight:scan [demo | --schema ... --snapshot ... | --schema ... --live --schemas ...]` — runs the CLI and
   explains the JSON report. Live scans only when you explicitly ask; credentials come from the environment variable
   `DB_PREFLIGHT_DATABASE_URL` set before starting Claude Code (never paste them into the chat).

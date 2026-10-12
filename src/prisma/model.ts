@@ -15,6 +15,7 @@ import type {
   RelationEnd,
   ResolvedRelation,
   SkippedInput,
+  SourceSpan,
   UniqueDecl,
 } from "../core/types.ts";
 import { compareStrings } from "./discover.ts";
@@ -164,7 +165,21 @@ export function buildPrismaModel(asts: FileAst[], files: PrismaFileInfo[], skipp
 
 function readDatasource(b: BlockNode, diagnostics: Diagnostic[]): DatasourceInfo {
   const info: DatasourceInfo = { relationModeSource: "default", relationMode: "foreignKeys", span: b.span };
+  // Repeated relationMode declarations are ambiguous whatever their values or order (REV-001).
+  const relationModeProps = b.properties.filter((p) => p.key === "relationMode");
+  const duplicateRelationMode = relationModeProps[1];
+  if (duplicateRelationMode) {
+    delete info.relationMode;
+    info.relationModeSource = "unknown";
+    diagnostics.push({
+      code: "PRISMA_RELATION_MODE_DUPLICATE",
+      severity: "blocking",
+      message: "relationMode is declared more than once in the datasource block; foreign-key checks are unknown",
+      span: duplicateRelationMode.span,
+    });
+  }
   for (const p of b.properties) {
+    if (p.key === "relationMode" && duplicateRelationMode) continue;
     if (p.key === "provider") {
       if (p.value.kind === "string") info.provider = p.value.value;
       else
@@ -197,7 +212,31 @@ function readDatasource(b: BlockNode, diagnostics: Diagnostic[]): DatasourceInfo
     }
     // url/directUrl/shadowDatabaseUrl/extensions are intentionally neither evaluated nor reported.
   }
+  // A statement that failed to parse may have been a (second) relationMode, and the parser keeps a
+  // property whose trailing syntax failed, so any blocking problem inside the datasource block
+  // makes the relation mode unknown, even an explicit-looking one (RV-004 / RV-009). The block's
+  // own diagnostics count wherever they point (an unclosed block reports at EOF, past its span);
+  // span containment is only used for file-level diagnostics (INS-001).
+  const blockingInside =
+    b.diagnostics.some((d) => d.severity === "blocking") ||
+    diagnostics.some((d) => d.severity === "blocking" && d.span !== undefined && spanWithin(d.span, b.span));
+  if (blockingInside && info.relationModeSource !== "unknown") {
+    delete info.relationMode;
+    info.relationModeSource = "unknown";
+    diagnostics.push({
+      code: "PRISMA_RELATION_MODE_UNKNOWN",
+      severity: "warning",
+      message: "the datasource block contains a statement that could not be read; relationMode and foreign-key checks are unknown",
+      span: b.span,
+    });
+  }
   return info;
+}
+
+function spanWithin(inner: SourceSpan, outer: SourceSpan): boolean {
+  if (inner.file !== outer.file) return false;
+  const before = (l1: number, c1: number, l2: number, c2: number) => l1 < l2 || (l1 === l2 && c1 <= c2);
+  return before(outer.line, outer.column, inner.line, inner.column) && before(inner.endLine, inner.endColumn, outer.endLine, outer.endColumn);
 }
 
 interface NameTables {

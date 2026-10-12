@@ -48,6 +48,25 @@ describe("schema discovery", () => {
     expect(d.skipped).toContainEqual({ path: "link.prisma", reason: "symbolic link not followed" });
   });
 
+  it("REV-002: an excluded name stays excluded when it is a directory link; other directory links are not followed", (ctx) => {
+    const root = tmp();
+    const outside = tmp();
+    writeFileSync(join(outside, "secret.prisma"), "model S {\n  id Int @id\n}\n");
+    writeFileSync(join(root, "a.prisma"), "model A {\n  id Int @id\n}\n");
+    try {
+      // "junction" lets Windows create directory links without developer mode; ignored elsewhere.
+      symlinkSync(outside, join(root, "node_modules"), "junction");
+      symlinkSync(outside, join(root, "more"), "junction");
+    } catch {
+      ctx.skip("directory link creation not permitted on this machine");
+      return;
+    }
+    const d = discoverPrismaFiles(root);
+    expect(d.files.map((f) => f.relPath)).toEqual(["a.prisma"]);
+    expect(d.skipped).toContainEqual({ path: "node_modules", reason: "excluded directory" });
+    expect(d.skipped).toContainEqual({ path: "more", reason: "symbolic link not followed" });
+  });
+
   it("enforces explicit input and limits", () => {
     const root = tmp();
     expect(() => discoverPrismaFiles(join(root, "missing"))).toThrow(DbpError);

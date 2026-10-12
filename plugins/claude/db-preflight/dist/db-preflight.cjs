@@ -5528,15 +5528,15 @@ function discoverPrismaFiles(input, limits = DISCOVERY_LIMITS) {
         const childAbs = (0, import_node_path.join)(dir, name);
         const childRel = rel ? `${rel}/${name}` : name;
         const cst = (0, import_node_fs.lstatSync)(childAbs);
+        if ((cst.isDirectory() || cst.isSymbolicLink()) && EXCLUDED_DIRS.has(name)) {
+          skipped.push({ path: childRel, reason: "excluded directory" });
+          continue;
+        }
         if (cst.isSymbolicLink()) {
           skipped.push({ path: childRel, reason: "symbolic link not followed" });
           continue;
         }
         if (cst.isDirectory()) {
-          if (EXCLUDED_DIRS.has(name)) {
-            skipped.push({ path: childRel, reason: "excluded directory" });
-            continue;
-          }
           walk(childAbs, childRel, depth + 1);
         } else if (cst.isFile() && name.toLowerCase().endsWith(".prisma")) {
           found.push({ relPath: childRel, absPath: childAbs });
@@ -6233,7 +6233,8 @@ function runEngine(input) {
     const ev = [...relEv];
     const targetName = targetModel.dbName;
     const sameTarget = t.foreignKeys.filter((k) => k.references.schema === targetSchema && k.references.table === targetName);
-    const exact = sameTarget.find((k) => k.columns.length === srcCols.length && pairKey(k.columns, k.references.columns) === expectedPairs);
+    const exactAll = sameTarget.filter((k) => k.columns.length === srcCols.length && pairKey(k.columns, k.references.columns) === expectedPairs);
+    const exact = exactAll.find((k) => k.validated && k.enforced && !k.period) ?? exactAll[0];
     const expectedText = `${t.schema}.${t.name}${cols(srcCols)} -> ${targetSchema}.${targetName}${cols(dstCols)}`;
     if (exact) {
       ev.push(
@@ -6941,13 +6942,20 @@ function workerEnv(source = process.env) {
   }
   return env;
 }
+var STDERR_LIMIT = 64 * 1024;
+var STDERR_PREVIEW = 500;
+function workerFailureMessage(stderr, overflowed, secrets) {
+  if (overflowed) return "live worker failed without a result (worker stderr exceeded the collection limit and is not shown)";
+  if (!stderr) return "live worker failed without a result";
+  return `live worker failed without a result: ${redact(stderr, secrets).slice(0, STDERR_PREVIEW)}`;
+}
 async function collectLiveViaWorker(opts, scriptPath = process.argv[1] ?? "") {
   const raw = process.env[opts.envName];
   if (raw === void 0 || raw === "") {
     throw new DbpError("DATABASE_URL_ENV_MISSING", `environment variable ${opts.envName} is not set; see README for PowerShell and Bash examples`);
   }
-  parseDatabaseUrl(raw, opts.envName);
-  const secrets = targetSecrets(raw, null);
+  const target = parseDatabaseUrl(raw, opts.envName);
+  const secrets = targetSecrets(raw, target);
   const request = { url: raw, envName: opts.envName, schemas: opts.schemas, timeoutMs: opts.timeoutMs };
   return await new Promise((resolve4, reject) => {
     const child = (0, import_node_child_process.spawn)(process.execPath, [scriptPath, "__live-worker"], {
@@ -6957,6 +6965,7 @@ async function collectLiveViaWorker(opts, scriptPath = process.argv[1] ?? "") {
     });
     let out = "";
     let err = "";
+    let errOverflowed = false;
     const killTimer = setTimeout(() => {
       child.kill("SIGKILL");
       reject(new DbpError("LIVE_TIMEOUT", `live metadata collection exceeded ${opts.timeoutMs} ms and was aborted`));
@@ -6965,7 +6974,8 @@ async function collectLiveViaWorker(opts, scriptPath = process.argv[1] ?? "") {
       if (out.length < 256 * 1024 * 1024) out += d;
     });
     child.stderr.setEncoding("utf8").on("data", (d) => {
-      if (err.length < 64 * 1024) err += d;
+      if (err.length < STDERR_LIMIT) err += d;
+      else errOverflowed = true;
     });
     child.on("error", (e) => {
       clearTimeout(killTimer);
@@ -6978,7 +6988,7 @@ async function collectLiveViaWorker(opts, scriptPath = process.argv[1] ?? "") {
       try {
         msg = JSON.parse(line);
       } catch {
-        reject(new DbpError("WORKER_FAILED", `live worker failed without a result${err ? `: ${redact(err.slice(0, 500), secrets)}` : ""}`));
+        reject(new DbpError("WORKER_FAILED", workerFailureMessage(err, errOverflowed, secrets)));
         return;
       }
       if (msg.ok) resolve4(msg.result);
@@ -7152,8 +7162,8 @@ function readForeignKey(v, p) {
     enforced: bool(o.enforced ?? true, `${p}.enforced`)
   };
   if (o.period !== void 0) fk.period = bool(o.period, `${p}.period`);
-  if (new Set(fk.columns).size !== fk.columns.length || new Set(fk.references.columns).size !== fk.references.columns.length) {
-    throw new SnapshotInvalid(p, "foreign key column lists must not repeat a column");
+  if (new Set(fk.references.columns).size !== fk.references.columns.length) {
+    throw new SnapshotInvalid(`${p}.references.columns`, "referenced columns must not repeat a column");
   }
   if (fk.columns.length === 0 || fk.columns.length !== fk.references.columns.length) {
     throw new SnapshotInvalid(p, "foreign key columns and referenced columns must be non-empty and equally long");
@@ -7235,7 +7245,9 @@ function parseSnapshot(raw) {
   });
   const gaps = arr(o.gaps ?? [], "$.gaps", 1e4).map((g, i) => {
     const go = obj(g, `$.gaps[${i}]`);
-    return { scope: str(go.scope, `$.gaps[${i}].scope`), reason: str(go.reason, `$.gaps[${i}].reason`, 2e3) };
+    const scope = str(go.scope, `$.gaps[${i}].scope`);
+    if (scope !== "*" && !requested.has(scope)) throw new SnapshotInvalid(`$.gaps[${i}].scope`, 'must be "*" or one of requestedSchemas');
+    return { scope, reason: str(go.reason, `$.gaps[${i}].reason`, 2e3) };
   });
   if (o.complete === true && gaps.length > 0) {
     throw new SnapshotInvalid("$.complete", "complete is true but gaps are recorded");
@@ -7296,7 +7308,8 @@ function restrictScope(db, schemas) {
     throw new DbpError("SCOPE_NOT_IN_SNAPSHOT", `--schemas includes schemas that the snapshot did not collect: ${missing.join(", ")}`);
   }
   const keep = new Set(schemas);
-  const keptGaps = db.gaps.filter((g) => g.scope === "*" || keep.has(g.scope));
+  const recognized = (g) => g.scope === "*" || db.requestedSchemas.includes(g.scope);
+  const keptGaps = db.gaps.filter((g) => !recognized(g) || g.scope === "*" || keep.has(g.scope));
   const complete = db.complete || db.gaps.length > 0 && keptGaps.length === 0;
   return {
     ...db,
@@ -7456,7 +7469,20 @@ function buildPrismaModel(asts, files, skipped) {
 }
 function readDatasource(b, diagnostics) {
   const info = { relationModeSource: "default", relationMode: "foreignKeys", span: b.span };
+  const relationModeProps = b.properties.filter((p) => p.key === "relationMode");
+  const duplicateRelationMode = relationModeProps[1];
+  if (duplicateRelationMode) {
+    delete info.relationMode;
+    info.relationModeSource = "unknown";
+    diagnostics.push({
+      code: "PRISMA_RELATION_MODE_DUPLICATE",
+      severity: "blocking",
+      message: "relationMode is declared more than once in the datasource block; foreign-key checks are unknown",
+      span: duplicateRelationMode.span
+    });
+  }
   for (const p of b.properties) {
+    if (p.key === "relationMode" && duplicateRelationMode) continue;
     if (p.key === "provider") {
       if (p.value.kind === "string") info.provider = p.value.value;
       else
@@ -7488,7 +7514,23 @@ function readDatasource(b, diagnostics) {
       }
     }
   }
+  const blockingInside = b.diagnostics.some((d) => d.severity === "blocking") || diagnostics.some((d) => d.severity === "blocking" && d.span !== void 0 && spanWithin(d.span, b.span));
+  if (blockingInside && info.relationModeSource !== "unknown") {
+    delete info.relationMode;
+    info.relationModeSource = "unknown";
+    diagnostics.push({
+      code: "PRISMA_RELATION_MODE_UNKNOWN",
+      severity: "warning",
+      message: "the datasource block contains a statement that could not be read; relationMode and foreign-key checks are unknown",
+      span: b.span
+    });
+  }
   return info;
+}
+function spanWithin(inner, outer) {
+  if (inner.file !== outer.file) return false;
+  const before = (l1, c1, l2, c2) => l1 < l2 || l1 === l2 && c1 <= c2;
+  return before(outer.line, outer.column, inner.line, inner.column) && before(inner.endLine, inner.endColumn, outer.endLine, outer.endColumn);
 }
 function readModel(b, names, diagnostics) {
   const model = {

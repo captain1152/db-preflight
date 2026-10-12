@@ -14,4 +14,4 @@
 - Contracts: [report](../schemas/report.schema.json), [snapshot](../schemas/snapshot.schema.json)
 - Real outputs: [demo text](examples/demo-output.txt), [demo JSON](examples/demo-report.json),
   [demo Markdown](examples/demo-report.md), [inconclusive scan](examples/unsupported-output.txt)
-- Project process: [execution plan](EXECUTION_PLAN.md), [plan review log](PLAN-REVIEW-LOG.md), [progress](PROGRESS.md)
+- Project process: [progress](PROGRESS.md)

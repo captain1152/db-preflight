@@ -6,8 +6,9 @@ import { afterAll, describe, expect, it } from "vitest";
 import { writeOut } from "../../src/cli/output.ts";
 import { DbpError } from "../../src/core/errors.ts";
 import { normalize } from "../../src/postgres/collector.ts";
-import { parseDatabaseUrl } from "../../src/postgres/connection.ts";
-import { parseSnapshot, restrictScope, snapshotToDatabaseModel } from "../../src/postgres/snapshot.ts";
+import { parseDatabaseUrl, targetSecrets } from "../../src/postgres/connection.ts";
+import { workerFailureMessage } from "../../src/postgres/live.ts";
+import { databaseModelToSnapshot, parseSnapshot, restrictScope, snapshotToDatabaseModel } from "../../src/postgres/snapshot.ts";
 import { buildPrismaModel } from "../../src/prisma/model.ts";
 import { formatError } from "../../src/safety/redact.ts";
 import { DS, dbModel, FIXTURES, fk, key, scanFixture, scanSources, scanText, status, table } from "../helpers.ts";
@@ -167,7 +168,7 @@ describe("re-inspection findings IR-009 … IR-015", () => {
     expect(excluded.diagnostics.some((d) => d.code === "SCHEMA_INPUT_NOT_READ")).toBe(false);
   });
 
-  it("IR-011: a FK repeating one pair does not match a composite relation; snapshots reject repeated FK columns", () => {
+  it("IR-011: a FK repeating one pair does not match a composite relation; snapshots reject repeated referenced columns", () => {
     const r = scanFixture("healthy", {
       db: (d) => ({
         ...d,
@@ -189,7 +190,7 @@ describe("re-inspection findings IR-009 … IR-015", () => {
     });
     expect(status(r, "DBP004:relation SnapshotSummary.snapshot")).toBe("fail");
     const s = JSON.parse(readFileSync(join(FIXTURES, "healthy", "snapshot.json"), "utf8"));
-    s.tables[2].foreignKeys[0].columns = ["organization_id", "organization_id", "organization_id"];
+    s.tables[2].foreignKeys[0].references.columns = ["organization_id", "organization_id", "organization_id"];
     expect(() => parseSnapshot(s)).toThrow(DbpError);
   });
 
@@ -223,5 +224,112 @@ describe("re-inspection findings IR-009 … IR-015", () => {
     expect(db.gaps).toEqual([]);
     const s2 = { ...s, gaps: [] };
     expect(restrictScope(snapshotToDatabaseModel(parseSnapshot(s2), "snapshot"), ["public"]).complete).toBe(false);
+  });
+});
+
+describe("plan-review findings RV-001 … RV-009", () => {
+  const relationText = (relationModeLine: string) =>
+    `datasource db {\n  provider = "postgresql"\n${relationModeLine}}\nmodel Parent {\n  id Int @id\n  kids Child[]\n}\nmodel Child {\n  id Int @id\n  pid Int\n  p Parent @relation(fields: [pid], references: [id])\n}\n`;
+  const noFkDb = () =>
+    dbModel([
+      table("Parent", ["id"], [key("parent_pkey", ["id"], { kind: "primary_key" })]),
+      table("Child", ["id", "pid"], [key("child_pkey", ["id"], { kind: "primary_key" })]),
+    ]);
+
+  it("RV-001: a credential crossing the preview cut is redacted before truncation", () => {
+    const url = "postgres://app:hunter2secretvalue@db.example/app";
+    const secrets = targetSecrets(url, parseDatabaseUrl(url, "X"));
+    const msg = workerFailureMessage(`${"x".repeat(480)}${url}`, false, secrets);
+    expect(msg).not.toContain("hunter2");
+    expect(msg).not.toContain("hunt");
+  });
+
+  it("RV-008: overflowed stderr is never shown, so a secret split across dropped chunks cannot leak", () => {
+    const msg = workerFailureMessage(`${"x".repeat(64 * 1024 - 20)} postgres://app:${"p".repeat(10)}`, true, ["postgres://app:pppp-not-matching"]);
+    expect(msg).not.toContain("postgres");
+    expect(msg).not.toContain("ppp");
+    expect(msg).toContain("not shown");
+  });
+
+  it("RV-002: repeated referencing FK columns survive a model -> snapshot -> parse round trip", () => {
+    const db = dbModel([
+      table("parent", ["x", "y"], [key("parent_xy", ["x", "y"])]),
+      table("child", ["a"], [], [fk("child_a_fkey", ["a", "a"], "parent", ["x", "y"])]),
+    ]);
+    const parsed = parseSnapshot(JSON.parse(JSON.stringify(databaseModelToSnapshot(db))));
+    expect(parsed.tables.find((t) => t.name === "child")?.foreignKeys[0]?.columns).toEqual(["a", "a"]);
+  });
+
+  it("RV-003: gap scopes must be '*' or a requested schema; restriction never drops an unrecognized gap", () => {
+    const s = JSON.parse(readFileSync(join(FIXTURES, "healthy", "snapshot.json"), "utf8"));
+    s.complete = false;
+    s.gaps = [{ scope: "publci", reason: "typo" }];
+    expect(() => parseSnapshot(s)).toThrow(DbpError);
+    const db = { ...dbModel([table("t", ["id"])]), complete: false, gaps: [{ scope: "publci", reason: "typo" }] };
+    expect(restrictScope(db, ["public"]).complete).toBe(false);
+  });
+
+  for (const [name, line] of [
+    ["RV-004: an undefined escape in relationMode", '  relationMode = "prism\\q"\n'],
+    ["RV-009: trailing syntax after an explicit relationMode", '  relationMode = "foreignKeys" + env("X")\n'],
+  ] as const) {
+    it(`${name} makes FK checks unknown instead of fk_missing`, () => {
+      const r = scanText(relationText(line), noFkDb(), "public");
+      expect(r.prisma.datasource.relationModeSource).toBe("unknown");
+      expect(status(r, "DBP004:relation Child.p")).toBe("unknown");
+      expect(r.result.exitCode).toBe(3);
+    });
+  }
+
+  for (const tail of ["", "\n", "\n  \n"]) {
+    it(`INS-001: an unfinished datasource at EOF (tail ${JSON.stringify(tail)}) makes FK checks unknown`, () => {
+      const models = relationText("").slice(relationText("").indexOf("model Parent"));
+      const text = `${models}datasource db {\n  provider = "postgresql"\n  relationMode =${tail}`;
+      const r = scanText(text, noFkDb(), "public");
+      expect(r.prisma.datasource.relationModeSource).toBe("unknown");
+      expect(status(r, "DBP004:relation Child.p")).toBe("unknown");
+      expect(r.result.exitCode).toBe(3);
+    });
+  }
+
+  for (const [name, lines] of [
+    ["conflicting literals", '  relationMode = "foreignKeys"\n  relationMode = "prisma"\n'],
+    ["invalid then valid", '  relationMode = env("MODE")\n  relationMode = "prisma"\n'],
+    ["valid then invalid", '  relationMode = "prisma"\n  relationMode = env("MODE")\n'],
+  ] as const) {
+    it(`REV-001: repeated relationMode (${name}) is unknown regardless of order`, () => {
+      const r = scanText(relationText(lines), noFkDb(), "public");
+      expect(r.prisma.datasource.relationModeSource).toBe("unknown");
+      expect(status(r, "DBP004:relation Child.p")).toBe("unknown");
+      expect(r.result.exitCode).toBe(3);
+    });
+  }
+
+  it("RV-004 baseline: the same schema with a valid relationMode reports the missing FK", () => {
+    const r = scanText(relationText('  relationMode = "foreignKeys"\n'), noFkDb(), "public");
+    expect(status(r, "DBP004:relation Child.p")).toBe("fail");
+  });
+
+  it("RV-005: a validated FK proves the relation regardless of constraint order", () => {
+    for (const [pendingName, validName] of [
+      ["a_pending", "z_valid"],
+      ["z_pending", "a_valid"],
+    ] as const) {
+      const r = scanFixture("healthy", {
+        db: (d) => ({
+          ...d,
+          tables: d.tables.map((t) => {
+            const real = t.foreignKeys[0];
+            if (t.name !== "snapshot_summaries" || !real) return t;
+            const both = [
+              { ...real, name: pendingName, validated: false },
+              { ...real, name: validName },
+            ];
+            return { ...t, foreignKeys: both.sort((x, y) => (x.name < y.name ? -1 : 1)) };
+          }),
+        }),
+      });
+      expect(status(r, "DBP004:relation SnapshotSummary.snapshot")).toBe("pass");
+    }
   });
 });

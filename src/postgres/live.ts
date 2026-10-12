@@ -49,14 +49,29 @@ export function workerEnv(source: NodeJS.ProcessEnv = process.env): Record<strin
   return env;
 }
 
+const STDERR_LIMIT = 64 * 1024;
+const STDERR_PREVIEW = 500;
+
+/**
+ * Message for a worker that exited without a result. Secrets are redacted in the full collected
+ * stderr before truncation (inspection IR-014 / RV-001). If stderr overflowed the collection
+ * limit, a secret may straddle the retained and the dropped part, where neither exact matching
+ * nor the URL pattern can recognize it, so no stderr text is shown at all (RV-008).
+ */
+export function workerFailureMessage(stderr: string, overflowed: boolean, secrets: readonly string[]): string {
+  if (overflowed) return "live worker failed without a result (worker stderr exceeded the collection limit and is not shown)";
+  if (!stderr) return "live worker failed without a result";
+  return `live worker failed without a result: ${redact(stderr, secrets).slice(0, STDERR_PREVIEW)}`;
+}
+
 export async function collectLiveViaWorker(opts: LiveOptions, scriptPath: string = process.argv[1] ?? ""): Promise<LiveResult> {
   const raw = process.env[opts.envName];
   if (raw === undefined || raw === "") {
     throw new DbpError("DATABASE_URL_ENV_MISSING", `environment variable ${opts.envName} is not set; see README for PowerShell and Bash examples`);
   }
   // Validate in the parent too so that obvious mistakes fail before spawning.
-  parseDatabaseUrl(raw, opts.envName);
-  const secrets = targetSecrets(raw, null);
+  const target = parseDatabaseUrl(raw, opts.envName);
+  const secrets = targetSecrets(raw, target);
   const request: WorkerRequest = { url: raw, envName: opts.envName, schemas: opts.schemas, timeoutMs: opts.timeoutMs };
 
   return await new Promise<LiveResult>((resolve, reject) => {
@@ -67,6 +82,7 @@ export async function collectLiveViaWorker(opts: LiveOptions, scriptPath: string
     });
     let out = "";
     let err = "";
+    let errOverflowed = false;
     const killTimer = setTimeout(() => {
       child.kill("SIGKILL");
       reject(new DbpError("LIVE_TIMEOUT", `live metadata collection exceeded ${opts.timeoutMs} ms and was aborted`));
@@ -75,7 +91,8 @@ export async function collectLiveViaWorker(opts: LiveOptions, scriptPath: string
       if (out.length < 256 * 1024 * 1024) out += d;
     });
     child.stderr.setEncoding("utf8").on("data", (d: string) => {
-      if (err.length < 64 * 1024) err += d;
+      if (err.length < STDERR_LIMIT) err += d;
+      else errOverflowed = true;
     });
     child.on("error", (e) => {
       clearTimeout(killTimer);
@@ -88,7 +105,7 @@ export async function collectLiveViaWorker(opts: LiveOptions, scriptPath: string
       try {
         msg = JSON.parse(line) as WorkerResponse;
       } catch {
-        reject(new DbpError("WORKER_FAILED", `live worker failed without a result${err ? `: ${redact(err.slice(0, 500), secrets)}` : ""}`));
+        reject(new DbpError("WORKER_FAILED", workerFailureMessage(err, errOverflowed, secrets)));
         return;
       }
       if (msg.ok) resolve(msg.result);

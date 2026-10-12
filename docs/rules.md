@@ -67,12 +67,16 @@ A larger key (F ⊂ K) does **not** guarantee F.
 ## DBP004 — Foreign key correspondence mismatch
 
 - **Applies to**: relations with an owning side, when `relationMode` is `foreignKeys` (explicit, or the documented
-  default when a datasource block exists without `relationMode`).
+  default when a datasource block exists without `relationMode`). If any statement in the datasource block cannot be
+  read, or `relationMode` is declared more than once, the relation mode is unknown, even when a `relationMode` value
+  was read.
 - **Passes when**: a foreign key on the owner table targets the mapped referenced table with exactly the expected
   multiset of column **pairs** (`fields[i] → references[i]`); listing order of the pairs does not matter, pairing does.
+  When several FKs match, any validated, enforced, non-`PERIOD` one decides; constraint names and order do not.
 - **Fails when**: no such FK (`fk_missing`), or related FKs pair columns differently / point elsewhere (`fk_mapping_mismatch`).
 - **Not applicable**: `relationMode = "prisma"` (physical FK absence is expected).
-- **Unknown**: no datasource block (relation mode unknown), `NOT VALID`, `NOT ENFORCED` or PostgreSQL 18 temporal (`PERIOD`) FKs,
+- **Unknown**: no datasource block or an unreadable one (relation mode unknown), matching FKs that are all `NOT VALID`,
+  `NOT ENFORCED` or PostgreSQL 18 temporal (`PERIOD`),
   implicit many-to-many join tables, inheritance, ambiguous relations, unsupported `@relation` arguments on either
   relation field, any incomplete collection for the owner's schema (a matching FK may simply not have been collected),
   and — when no matching FK exists — a referenced table that is out of scope, unresolved or missing.

@@ -7,7 +7,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -87,17 +87,25 @@ try {
   }
 
   // ---- 2. npm tarball ------------------------------------------------------------------------
-  // npm on Windows runs through cmd.exe, so the pack output directory is kept ASCII-only;
-  // the tarball is then extracted and executed under the spaced/Korean path.
+  // npm on Windows runs through cmd.exe, so the pack output directory is kept ASCII-only and
+  // quoted (Node joins shell arguments unescaped; the temp root itself may contain spaces).
+  // The tarball is then extracted and executed under the spaced/Korean path.
   const packDir = mkdtempSync(join(tmpdir(), "dbp-pack-"));
-  const npm = process.platform === "win32" ? "npm.cmd" : "npm";
-  execFileSync(npm, ["pack", "--pack-destination", packDir, "--silent"], { cwd: repo, encoding: "utf8", shell: process.platform === "win32" });
+  const win = process.platform === "win32";
+  execFileSync(win ? "npm.cmd" : "npm", ["pack", "--pack-destination", win ? `"${packDir}"` : packDir, "--silent"], {
+    cwd: repo,
+    encoding: "utf8",
+    shell: win,
+  });
   const tgz = readdirSync(packDir).find((f) => f.endsWith(".tgz"));
   check("npm pack produced a tarball", !!tgz);
   if (tgz) {
     const extract = join(root, "extracted pkg 한글");
     mkdirSync(extract, { recursive: true });
-    execFileSync("tar", ["-xzf", join(packDir, tgz), "-C", extract]);
+    // GNU tar (e.g. Git Bash on Windows) reads "C:" in an archive or -C path as a remote host,
+    // so extract in place with a drive-less relative archive path; bsdtar accepts the same.
+    const archive = relative(extract, join(packDir, tgz)).split(sep).join("/");
+    execFileSync("tar", ["-xzf", archive], { cwd: extract });
     const pkgRoot = join(extract, "package");
     const files = [];
     const walk = (d, rel = "") => {
